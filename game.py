@@ -130,4 +130,4 @@ if __name__ == "__main__":
     # print(HDG_T(30, 28, 0.5, 0.2, 0.2).expected_payoffs())
     # print(HDG_T(30, 28, 0.5, 0.5, 0.2).expected_payoffs())
     # print(HDG_T(30, 28, 0.5, 0.9, 0.2).expected_payoffs())
-    unittest.main()
+    unittest.main(verbosity=2)
