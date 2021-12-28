@@ -29,17 +29,6 @@ class HDG:
         else:
             return (self.R - (self.n_hawks - 1) * self.c_h) / self.n_hawks, 0.0
 
-    def payoff_matrix(self) -> np.ndarray:
-        """Computes the payoff matrix from current or given state.
-
-        :param state: State (number of hawks) to replace this instance's state, defaults to None
-        :type state: int, optional
-        :return: Payoff matrix
-        :rtype: np.ndarray
-        """
-        payoffs = self.expected_payoffs()
-        return np.repeat(payoffs, 2).reshape((2, 2))
-
 
 class HDGTest(unittest.TestCase):
     def test_payoffs(self):
