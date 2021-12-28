@@ -13,7 +13,7 @@ class HDG:
         self.c_h = c_h
         self.R = R
 
-    def expected_payoffs(self) -> (float, float):
+    def expected_payoffs(self) -> Tuple[float]:
         """
         Calculates the expected payoff for the game.
         :return: tuple (hawk_reward, dove_reward)
@@ -47,7 +47,7 @@ class HDG_T(HDG):
             return super().expected_payoffs()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # petits tests pour verifier que ça fonctionne
     print(HDG(30, 30, 0.5).expected_payoffs())
     print(HDG(30, 29, 0.5).expected_payoffs())
