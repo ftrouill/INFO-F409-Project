@@ -66,6 +66,13 @@ class InfiniteNPlayerHDGDynamics:
         dove_strategy = np.linspace(0, 1, num=self.nb_states, dtype=np.float64)
         # compute gradient
         G = np.array([self.compute_gradient_for_state(i) for i in dove_strategy])
+        # G2 = np.array([x * (1 - x) *
+        #                (HDG(self.N, self.c_h, self.R).average_fitness_infinite_pop(x)[1] -
+        #                 HDG(self.N, self.c_h, self.R).average_fitness_infinite_pop(x)[0])
+        #                for x in dove_strategy])
+        # print(G)
+        # print(G2)
+        # print(G2 - G)
         # find saddle points
         epsilon = 1e-5
         saddle_points_idx = np.where((G <= epsilon) & (G >= -epsilon))[0]

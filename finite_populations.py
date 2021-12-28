@@ -1,7 +1,6 @@
 import numpy as np
 from game import HDG
 import matplotlib.pyplot as plt
-from scipy.stats import hypergeom
 from typing import Tuple
 
 from dataclasses import dataclass
@@ -28,31 +27,6 @@ class FiniteNPlayerHDGDynamics:
     c_h: float
     w: float
 
-    def compute_fitnesses(self, k: int) -> Tuple[float, float]:
-        """
-        Compute the average fitness of the two strategies in the finite population.
-
-        Parameters
-        ----------
-        k: int
-            Number of doves in the population.
-
-        Returns
-        -------
-            tuple(fitness_hawk, fitness_dove)
-        """
-        fd = 0
-        fh = 0
-        hdg = HDG(self.N, self.c_h)
-        for i in range(self.N):
-            payoff_hawk, _ = hdg.expected_payoffs(i)
-            _, payoff_dove = hdg.expected_payoffs(i + 1)
-
-            fh += hypergeom(self.Z - 1, k, self.N - 1).pmf(i) * payoff_hawk
-            fd += hypergeom(self.Z - 1, k - 1, self.N - 1).pmf(i) * payoff_dove
-
-        return fh, fd
-
     def gradient_selection(self, k: int) -> float:
         """
         Compute the gradient of selection for given value of k.
@@ -67,7 +41,7 @@ class FiniteNPlayerHDGDynamics:
             gradient of selection for given k.
         """
 
-        fh, fd = self.compute_fitnesses(k)
+        fh, fd = HDG(self.N, self.c_h).average_fitness_finite_pop(k, self.Z)
 
         weighted_diff = self.w * (fd - fh)
         pop_factor = (k * (self.Z - k)) / (self.Z ** 2)

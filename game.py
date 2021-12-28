@@ -1,6 +1,7 @@
 from typing import Tuple
 from math import comb
 import numpy as np
+from scipy.stats import hypergeom
 
 import unittest
 
@@ -52,6 +53,30 @@ class HDG:
             ]
         )
         return f_h, f_d
+
+    def average_fitness_finite_pop(self, k: int, Z: int) -> Tuple[float, float]:
+        """
+        Compute the average fitness of the two strategies in the finite population.
+
+        Parameters
+        ----------
+        k: int
+            Number of doves in the population.
+
+        Returns
+        -------
+            tuple(fitness_hawk, fitness_dove)
+        """
+        fd = 0
+        fh = 0
+        for i in range(self.N):
+            payoff_hawk, _ = self.expected_payoffs(i)
+            _, payoff_dove = self.expected_payoffs(i + 1)
+
+            fh += hypergeom(Z - 1, k, self.N - 1).pmf(i) * payoff_hawk
+            fd += hypergeom(Z - 1, k - 1, self.N - 1).pmf(i) * payoff_dove
+
+        return fh, fd
 
 
 class HDGTest(unittest.TestCase):
