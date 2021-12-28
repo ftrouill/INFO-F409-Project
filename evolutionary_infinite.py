@@ -43,13 +43,12 @@ class InfiniteNPlayerHDGDynamics:
         )
 
     def plot_gradient(self):
-        # generate arrays of states
-        hawk_strategy = np.linspace(0, 1, num=self.nb_states, dtype=np.float64)
-        dove_strategy = 1 - hawk_strategy
+        # generate array of states
+        dove_strategy = np.linspace(0, 1, num=self.nb_states, dtype=np.float64)
         # compute gradient
         G = np.array([self.compute_gradient_for_state(i) for i in dove_strategy])
         # find saddle points
-        epsilon = 1e-7
+        epsilon = 1e-5
         saddle_points_idx = np.where((G <= epsilon) & (G >= -epsilon))[0]
         saddle_points = saddle_points_idx / (self.nb_states - 1)
         saddle_type, gradient_direction = find_saddle_type_and_gradient_direction(
@@ -67,6 +66,6 @@ class InfiniteNPlayerHDGDynamics:
 
 
 if __name__ == "__main__":
-    rep_dyn = InfiniteNPlayerHDGDynamics(5, 0.9)
+    rep_dyn = InfiniteNPlayerHDGDynamics(5, 0.9, nb_states=10000)
     ax = rep_dyn.plot_gradient()
     plt.show()
