@@ -102,7 +102,7 @@ class HDG_T(HDG):
     :param R: resource (=1.0 by default)
     """
 
-    c_d: float = 1.0
+    c_d: float = 0.5
     T: float = 0.5
 
     def expected_payoffs(self, n_doves) -> Tuple[float, float]:

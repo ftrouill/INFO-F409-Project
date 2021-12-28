@@ -1,4 +1,4 @@
-from game import HDG
+from game import HDG_T
 
 from egttools.utils import find_saddle_type_and_gradient_direction
 from egttools.plotting import plot_gradient as egt_gradient
@@ -13,7 +13,7 @@ from dataclasses import dataclass
 
 @dataclass
 class InfiniteNPlayerHDGDynamics:
-    """Generates replicator dynamics for infinite population.
+    """Generates replicator dynamics for HDG with infinite population.
 
     Parameters
     ----------
@@ -146,6 +146,31 @@ class InfiniteNPlayerHDGDynamics:
         plt.show()
 
 
+@dataclass
+class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
+    """Generates replicator dynamics for HDGT with infinite population.
+
+    Parameters
+    ----------
+    c_d : float
+        Cost for doves to protect the resource.
+    T : float
+        Doves threshold to protect the resource.
+    """
+
+    c_d: float = 0.5
+    T: float = 0.5
+
+    def compute_gradient_for_state(self, x: float) -> float:
+        hdgt = HDG_T(self.N, self.c_h, self.R, self.c_d, self.T)
+        # compute fitnesses
+        f_h, f_d = hdgt.average_fitness_infinite_pop(x)
+        # compute gradient
+        return x * (1 - x) * (f_d - f_h)
+
+
 if __name__ == "__main__":
-    InfiniteNPlayerHDGDynamics.plot_hdg_gradient()
-    InfiniteNPlayerHDGDynamics.plot_hdg_equilibria()
+    # InfiniteNPlayerHDGDynamics.plot_hdg_gradient()
+    # InfiniteNPlayerHDGDynamics.plot_hdg_equilibria()
+    hdgt = InfiniteNPlayerHDGTDynamics(N=30, c_h=0.2, R=1, c_d=0.2, T=0.4)
+    print(hdgt.compute_gradient_for_state(0.5))
