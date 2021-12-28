@@ -1,6 +1,8 @@
 from typing import Tuple
 import numpy as np
 
+import unittest
+
 
 class HDG:
     def __init__(self, N: int, n_doves: int, c_h: float, R: float = 1.0):
@@ -17,19 +19,17 @@ class HDG:
         self.c_h = c_h
         self.R = R
 
-    def expected_payoffs(self, state: int = None) -> Tuple[float]:
+    def expected_payoffs(self) -> Tuple[float]:
         """
         Calculates the expected payoff for the game.
-        :param state: Number of hawks, optional
         :return: tuple (hawk_reward, dove_reward)
         """
-        test_state = state if state is not None else self.n_hawks
-        if test_state == 0:
+        if self.n_hawks == 0:
             return 0.0, self.R / self.N  # change hawks payoffs to None instead of 0?
         else:
             return (self.R - (self.n_hawks - 1) * self.c_h) / self.n_hawks, 0.0
 
-    def payoff_matrix(self, state: int = None) -> np.ndarray:
+    def payoff_matrix(self) -> np.ndarray:
         """Computes the payoff matrix from current or given state.
 
         :param state: State (numbre of hawks) to replace this instance's state, defaults to None
@@ -37,8 +37,20 @@ class HDG:
         :return: Payoff matrix
         :rtype: np.ndarray
         """
-        payoffs = self.expected_payoffs(state)
+        payoffs = self.expected_payoffs()
         return np.repeat(payoffs, 2).reshape((2, 2))
+
+
+class HDGTest(unittest.TestCase):
+    def test_payoffs(self):
+        hdg = HDG(30, 30, 0.5)
+        self.assertEqual(hdg.expected_payoffs(), (0.0, 1 / 30))
+        hdg = HDG(30, 29, 0.5)
+        self.assertEqual(hdg.expected_payoffs(), (1, 0.0))
+        hdg = HDG(30, 28, 0.5)
+        self.assertEqual(hdg.expected_payoffs(), (0.5 / 2, 0.0))
+        hdg = HDG(30, 25, 0.5)
+        self.assertEqual(hdg.expected_payoffs(), (-1 / 5, 0.0))
 
 
 class HDG_T(HDG):
@@ -69,10 +81,11 @@ class HDG_T(HDG):
 
 if __name__ == "__main__":
     # petits tests pour verifier que ça fonctionne
-    print(HDG(30, 30, 0.5).expected_payoffs())
-    print(HDG(30, 29, 0.5).expected_payoffs())
-    print(HDG(30, 28, 0.5).expected_payoffs())
-    print(HDG(30, 25, 0.5).expected_payoffs())
-    print(HDG_T(30, 28, 0.5, 0.2, 0.2).expected_payoffs())
-    print(HDG_T(30, 28, 0.5, 0.5, 0.2).expected_payoffs())
-    print(HDG_T(30, 28, 0.5, 0.9, 0.2).expected_payoffs())
+    # print(HDG(30, 30, 0.5).expected_payoffs())
+    # print(HDG(30, 29, 0.5).expected_payoffs())
+    # print(HDG(30, 28, 0.5).expected_payoffs())
+    # print(HDG(30, 25, 0.5).expected_payoffs())
+    # print(HDG_T(30, 28, 0.5, 0.2, 0.2).expected_payoffs())
+    # print(HDG_T(30, 28, 0.5, 0.5, 0.2).expected_payoffs())
+    # print(HDG_T(30, 28, 0.5, 0.9, 0.2).expected_payoffs())
+    unittest.main()
