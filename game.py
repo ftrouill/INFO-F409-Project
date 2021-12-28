@@ -1,4 +1,5 @@
 from typing import Tuple
+import numpy as np
 
 
 class HDG:
@@ -16,15 +17,28 @@ class HDG:
         self.c_h = c_h
         self.R = R
 
-    def expected_payoffs(self) -> Tuple[float]:
+    def expected_payoffs(self, state: int = None) -> Tuple[float]:
         """
         Calculates the expected payoff for the game.
+        :param state: Number of hawks, optional
         :return: tuple (hawk_reward, dove_reward)
         """
-        if self.n_hawks == 0:
+        test_state = state if state is not None else self.n_hawks
+        if test_state == 0:
             return 0.0, self.R / self.N  # change hawks payoffs to None instead of 0?
         else:
             return (self.R - (self.n_hawks - 1) * self.c_h) / self.n_hawks, 0.0
+
+    def payoff_matrix(self, state: int = None) -> np.ndarray:
+        """Computes the payoff matrix from current or given state.
+
+        :param state: State (numbre of hawks) to replace this instance's state, defaults to None
+        :type state: int, optional
+        :return: Payoff matrix
+        :rtype: np.ndarray
+        """
+        payoffs = self.expected_payoffs(state)
+        return np.repeat(payoffs, 2).reshape((2, 2))
 
 
 class HDG_T(HDG):
