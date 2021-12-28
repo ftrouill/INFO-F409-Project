@@ -126,7 +126,7 @@ def plot_equilibria():
     N_values = [5, 10, 20, 50, 100]
     for N in N_values:
         rep_dyn = InfiniteNPlayerHDGDynamics(N, 0.9, nb_states=10000)
-        eq = rep_dyn.compute_equilibria_cost(epsilon=1e-6)
+        eq = rep_dyn.compute_equilibria_cost()
         plt.plot(np.linspace(0, 1, rep_dyn.nb_costs), eq, label=N)
     plt.legend()
     plt.show()
