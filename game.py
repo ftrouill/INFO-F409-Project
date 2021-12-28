@@ -13,14 +13,13 @@ class HDG:
     """
     Represents an N-player Hawk-Dove Game. Parameter R is assumed to be 1.
     :param N: number of players
-    :param n_doves: number of doves
     :param c_h: cost
     :param R: resource (=1.0 by default)
     """
 
     N: int
     c_h: float
-    R = 1.0
+    R: float = 1.0
 
     def expected_payoffs(self, n_doves) -> Tuple[float, float]:
         """
@@ -103,10 +102,8 @@ class HDG_T(HDG):
     :param R: resource (=1.0 by default)
     """
 
-    # def __init__(self, N: int, c_h: float, c_d: float, T: float, R: float = 1.0):
-    #     super().__init__(N, c_h, R)
-    c_d: float
-    T: float
+    c_d: float = 1.0
+    T: float = 0.5
 
     def expected_payoffs(self, n_doves) -> Tuple[float, float]:
         n_hawks = self.N - n_doves
@@ -114,6 +111,14 @@ class HDG_T(HDG):
             return 0.0, (self.R - n_hawks * self.c_d) / n_doves
         else:
             return super().expected_payoffs(n_doves)
+
+
+class HGDTTest(unittest.TestCase):
+    def test_payoffs(self):
+        hdgt = HDG_T(N=30, c_h=0.5, c_d=0.2, T=0.2)
+        self.assertEqual(hdgt.expected_payoffs(30), (0.0, 1 / 30))
+        self.assertEqual(hdgt.expected_payoffs(10), (0.0, -3 / 10))
+        self.assertEqual(hdgt.expected_payoffs(0), (-13.5 / 30, 0))
 
 
 if __name__ == "__main__":
