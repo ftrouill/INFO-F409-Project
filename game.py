@@ -4,19 +4,22 @@ import numpy as np
 
 import unittest
 
+from dataclasses import dataclass
 
+
+@dataclass
 class HDG:
-    def __init__(self, N: int, c_h: float, R: float = 1.0):
-        """
-        Creates an N-player Hawk-Dove Game. Parameter R is assumed to be 1.
-        :param N: number of players
-        :param n_doves: number of doves
-        :param c_h: cost
-        :param R: resource (=1.0 by default)
-        """
-        self.N = N
-        self.c_h = c_h
-        self.R = R
+    """
+    Represents an N-player Hawk-Dove Game. Parameter R is assumed to be 1.
+    :param N: number of players
+    :param n_doves: number of doves
+    :param c_h: cost
+    :param R: resource (=1.0 by default)
+    """
+
+    N: int
+    c_h: float
+    R = 1.0
 
     def expected_payoffs(self, n_doves) -> Tuple[float, float]:
         """
@@ -30,8 +33,24 @@ class HDG:
             return (self.R - (n_hawks - 1) * self.c_h) / n_hawks, 0.0
 
     def average_fitness_infinite_pop(self, x: float) -> Tuple[float, float]:
-        f_h = sum([comb(self.N-1, i)*(x**i)*((1-x)**(self.N-1-i))*self.expected_payoffs(i)[0] for i in range(self.N)])
-        f_d = sum([comb(self.N-1, i)*(x**i)*((1-x)**(self.N-1-i))*self.expected_payoffs(i+1)[1] for i in range(self.N)])
+        f_h = sum(
+            [
+                comb(self.N - 1, i)
+                * (x ** i)
+                * ((1 - x) ** (self.N - 1 - i))
+                * self.expected_payoffs(i)[0]
+                for i in range(self.N)
+            ]
+        )
+        f_d = sum(
+            [
+                comb(self.N - 1, i)
+                * (x ** i)
+                * ((1 - x) ** (self.N - 1 - i))
+                * self.expected_payoffs(i + 1)[1]
+                for i in range(self.N)
+            ]
+        )
         return f_h, f_d
 
 
@@ -47,6 +66,7 @@ class HDGTest(unittest.TestCase):
         self.assertEqual(hdg.expected_payoffs(25), (-1 / 5, 0.0))
 
 
+@dataclass
 class HDG_T(HDG):
     """
     Creates an N-player Hawk-Dove Game with threshold above which doves can aggregate and protect the resource.
@@ -58,12 +78,10 @@ class HDG_T(HDG):
     :param R: resource (=1.0 by default)
     """
 
-    def __init__(
-        self, N: int, c_h: float, c_d: float, T: float, R: float = 1.0
-    ):
-        super().__init__(N, c_h, R)
-        self.c_d = c_d
-        self.T = T
+    # def __init__(self, N: int, c_h: float, c_d: float, T: float, R: float = 1.0):
+    #     super().__init__(N, c_h, R)
+    c_d: float
+    T: float
 
     def expected_payoffs(self, n_doves) -> Tuple[float, float]:
         n_hawks = self.N - n_doves

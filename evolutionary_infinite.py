@@ -1,43 +1,39 @@
 from game import HDG
 
 from egttools.utils import find_saddle_type_and_gradient_direction
-from egttools.plotting import plot_gradient
+from egttools.plotting import plot_gradient as egt_gradient
 
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 import matplotlib.colors as mcolors
 
+from dataclasses import dataclass
 
+
+@dataclass
 class InfiniteNPlayerHDGDynamics:
-    def __init__(
-        self,
-        N: int,
-        c_h: float,
-        R: float = 1.0,
-        nb_states: int = 101,
-        nb_costs: int = 100,
-    ):
-        """Generates replicator dynamics for infinite population.
+    """Generates replicator dynamics for infinite population.
 
-        Parameters
-        ----------
-        N : int
-            Sample size.
-        c_h : float
-            Cost of injury for hawks.
-        R : float
-            Resource reward.
-        nb_states : int
-            State resolution for plotting.
-        nb_costs : int
-            Costs resolution for plotting.
-        """
-        self.N = N
-        self.c_h = c_h
-        self.R = R
-        self.nb_states = nb_states
-        self.nb_costs = nb_costs
+    Parameters
+    ----------
+    N : int
+        Sample size.
+    c_h : float
+        Cost of injury for hawks.
+    R : float
+        Resource reward.
+    nb_states : int
+        State resolution for plotting.
+    nb_costs : int
+        Costs resolution for plotting.
+    """
+
+    N: int
+    c_h: float
+    R: float = 1.0
+    nb_states: int = 101
+    nb_costs: int = 100
 
     def compute_gradient_for_state(self, x: float) -> float:
         """Compute the gradient for a given state.
@@ -77,7 +73,7 @@ class InfiniteNPlayerHDGDynamics:
         saddle_type, gradient_direction = find_saddle_type_and_gradient_direction(
             G, saddle_points_idx
         )
-        ax = plot_gradient(
+        ax = egt_gradient(
             dove_strategy,
             G,
             saddle_points,
@@ -109,32 +105,40 @@ class InfiniteNPlayerHDGDynamics:
             equilibria[i] = np.argmin(np.abs(G)) / self.nb_states
         return equilibria
 
+    @staticmethod
+    def plot_hdg_gradient(N=5) -> None:
+        """Plots replicator gradient for different cost values.
 
-def plot_hdg_gradient(N=5):
-    costs = [0.1, 0.5, 0.9]
-    plt.figure(figsize=(12, 8))
-    ax = plt.axes()
-    patches = np.zeros_like(costs, dtype=object)
-    for i, c in enumerate(costs):
-        rep_dyn = InfiniteNPlayerHDGDynamics(N, c, nb_states=10000)
-        rep_dyn.plot_gradient(ax=ax)
-        patches[i] = mpatches.Patch(
-            color=list(mcolors.TABLEAU_COLORS.values())[i], label=c
-        )
-    ax.legend(handles=patches.tolist())
-    plt.show()
+        Parameters
+        ----------
+        N : int, optional
+            Sample size, by default 5
+        """
+        costs = [0.1, 0.5, 0.9]
+        plt.figure(figsize=(12, 8))
+        ax = plt.axes()
+        patches = np.zeros_like(costs, dtype=object)
+        for i, c in enumerate(costs):
+            rep_dyn = InfiniteNPlayerHDGDynamics(N, c, nb_states=10000)
+            rep_dyn.plot_gradient(ax=ax)
+            patches[i] = mpatches.Patch(
+                color=list(mcolors.TABLEAU_COLORS.values())[i], label=c
+            )
+        ax.legend(handles=patches.tolist())
+        plt.show()
 
-
-def plot_equilibria():
-    N_values = [5, 10, 20, 50, 100]
-    for N in N_values:
-        rep_dyn = InfiniteNPlayerHDGDynamics(N, 0.9, nb_states=10000)
-        eq = rep_dyn.compute_equilibria_cost()
-        plt.plot(np.linspace(0, 1, rep_dyn.nb_costs), eq, label=N)
-    plt.legend()
-    plt.show()
+    @staticmethod
+    def plot_hdg_equilibria() -> None:
+        """Plots optimal state for different cost values."""
+        N_values = [5, 10, 20, 50, 100]
+        for N in N_values:
+            rep_dyn = InfiniteNPlayerHDGDynamics(N, 0.9, nb_states=10000)
+            eq = rep_dyn.compute_equilibria_cost()
+            plt.plot(np.linspace(0, 1, rep_dyn.nb_costs), eq, label=N)
+        plt.legend()
+        plt.show()
 
 
 if __name__ == "__main__":
-    plot_hdg_gradient()
-    plot_equilibria()
+    InfiniteNPlayerHDGDynamics.plot_hdg_gradient()
+    InfiniteNPlayerHDGDynamics.plot_hdg_equilibria()

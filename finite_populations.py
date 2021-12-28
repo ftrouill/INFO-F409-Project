@@ -4,27 +4,29 @@ import matplotlib.pyplot as plt
 from scipy.stats import hypergeom
 from typing import Tuple
 
+from dataclasses import dataclass
 
+
+@dataclass
 class FiniteNPlayerHDGDynamics:
+    """
 
-    def __init__(self, Z: int, N: int, c_h: float, w: float):
-        """
+    Parameters
+    ----------
+    Z: int
+        Population size.
+    N: int
+        Sample size.
+    c_h: float
+        Cost of injury for hawks.
+    w:
+        intensity of selection (sometimes called beta)
+    """
 
-        Parameters
-        ----------
-        Z: int
-            Population size.
-        N: int
-            Sample size.
-        c_h: float
-            Cost of injury for hawks.
-        w:
-            intensity of selection (sometimes called beta)
-        """
-        self.Z = Z
-        self.N = N
-        self.c_h = c_h
-        self.w = w
+    Z: int
+    N: int
+    c_h: float
+    w: float
 
     def compute_fitnesses(self, k: int) -> Tuple[float, float]:
         """
@@ -44,10 +46,10 @@ class FiniteNPlayerHDGDynamics:
         hdg = HDG(self.N, self.c_h)
         for i in range(self.N):
             payoff_hawk, _ = hdg.expected_payoffs(i)
-            _, payoff_dove = hdg.expected_payoffs(i+1)
+            _, payoff_dove = hdg.expected_payoffs(i + 1)
 
-            fh += hypergeom(self.Z-1, k, self.N-1).pmf(i) * payoff_hawk
-            fd += hypergeom(self.Z-1, k-1, self.N-1).pmf(i) * payoff_dove
+            fh += hypergeom(self.Z - 1, k, self.N - 1).pmf(i) * payoff_hawk
+            fd += hypergeom(self.Z - 1, k - 1, self.N - 1).pmf(i) * payoff_dove
 
         return fh, fd
 
@@ -67,8 +69,8 @@ class FiniteNPlayerHDGDynamics:
 
         fh, fd = self.compute_fitnesses(k)
 
-        weighted_diff = self.w*(fd - fh)
-        pop_factor = (k*(self.Z - k)) / (self.Z**2)
+        weighted_diff = self.w * (fd - fh)
+        pop_factor = (k * (self.Z - k)) / (self.Z ** 2)
 
         T_plus = pop_factor / (1 + np.exp(-weighted_diff))
         T_minus = pop_factor / (1 + np.exp(weighted_diff))
@@ -79,12 +81,12 @@ class FiniteNPlayerHDGDynamics:
         """
         Plot the gradient of selection as function of the fraction k/Z.
         """
-        ks = np.arange(self.Z+1)
+        ks = np.arange(self.Z + 1)
 
         gradient = [self.gradient_selection(k) for k in ks]
 
         plt.figure()
-        plt.plot(ks/self.Z, gradient)
+        plt.plot(ks / self.Z, gradient)
         plt.xlabel("k/Z")
         plt.ylabel("G(k)")
         plt.show()
@@ -93,6 +95,3 @@ class FiniteNPlayerHDGDynamics:
 if __name__ == "__main__":
     finite = FiniteNPlayerHDGDynamics(100, 5, 0.5, 1)
     finite.plot_gradient_selection()
-
-
-
