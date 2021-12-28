@@ -28,7 +28,10 @@ class InfiniteNPlayerHDGDynamics:
             Cost of injury for hawks.
         R : float
             Resource reward.
-
+        nb_states : int
+            State resolution for plotting.
+        nb_costs : int
+            Costs resolution for plotting.
         """
         self.N = N
         self.c_h = c_h
@@ -109,7 +112,7 @@ class InfiniteNPlayerHDGDynamics:
             G = np.array([self.compute_gradient_for_state(i) for i in dove_strategy])
             # remove first and last point
             G = G[1:-1]
-            # get the equilibria
+            # get the equilibria as the point closest to 0
             equilibria[i] = np.argmin(np.abs(G)) / self.nb_states
         return equilibria
 
@@ -133,7 +136,7 @@ def plot_equilibria():
     N_values = [5, 10, 20, 50, 100]
     for N in N_values:
         rep_dyn = InfiniteNPlayerHDGDynamics(N, 0.9, nb_states=10000)
-        eq = rep_dyn.compute_equilibria_cost(epsilon=1e-6)
+        eq = rep_dyn.compute_equilibria_cost()
         plt.plot(np.linspace(0, 1, rep_dyn.nb_costs), eq, label=N)
     plt.legend()
     plt.show()
