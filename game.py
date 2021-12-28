@@ -1,3 +1,6 @@
+from typing import Tuple
+
+
 class HDG:
     def __init__(self, N: int, n_doves: int, c_h: float, R: float = 1.0):
         """
@@ -35,14 +38,17 @@ class HDG_T(HDG):
     :param T: threshold for which dove are sufficiently many to protect resource from hawks
     :param R: resource (=1.0 by default)
     """
-    def __init__(self, N: int, n_doves: int, c_h: float, c_d: float, T: float, R: float = 1.0):
+
+    def __init__(
+        self, N: int, n_doves: int, c_h: float, c_d: float, T: float, R: float = 1.0
+    ):
         super().__init__(N, n_doves, c_h, R)
         self.c_d = c_d
         self.T = T
 
-    def expected_payoffs(self) -> (float, float):
-        if self.n_doves/self.N >= self.T:
-            return 0.0, (self.R - self.n_hawks * self.c_d)/self.n_doves
+    def expected_payoffs(self) -> Tuple[float]:
+        if self.n_doves / self.N >= self.T:
+            return 0.0, (self.R - self.n_hawks * self.c_d) / self.n_doves
         else:
             return super().expected_payoffs()
 
