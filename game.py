@@ -70,7 +70,7 @@ class HDG_T(HDG):
         if n_doves / self.N >= self.T:
             return 0.0, (self.R - n_hawks * self.c_d) / n_doves
         else:
-            return super().expected_payoffs()
+            return super().expected_payoffs(n_doves)
 
 
 if __name__ == "__main__":
