@@ -41,13 +41,11 @@ class FiniteNPlayerHDGDynamics:
         """
         fd = 0
         fh = 0
-
+        hdg_hawk = HDG(self.N, self.c_h)
+        hdg_dove = HDG(self.N, self.c_h)
         for i in range(self.N):
-            hdg_hawk = HDG(self.N, i, self.c_h)
-            hdg_dove = HDG(self.N, i+i, self.c_h)
-
-            payoff_hawk,_ = hdg_hawk.expected_payoffs()
-            _, payoff_dove = hdg_dove.expected_payoffs()
+            payoff_hawk, _ = hdg_hawk.expected_payoffs(i)
+            _, payoff_dove = hdg_dove.expected_payoffs(i+1)
 
             fh += hypergeom(self.Z-1, k, self.N-1).pmf(i) * payoff_hawk
             fd += hypergeom(self.Z-1, k-1, self.N-1).pmf(i) * payoff_dove
