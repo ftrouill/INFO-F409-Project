@@ -30,8 +30,9 @@ class HDG:
             return (self.R - (n_hawks - 1) * self.c_h) / n_hawks, 0.0
 
     def average_fitness_infinite_pop(self, x: float) -> Tuple[float, float]:
-        f_h = sum([comb(self.N-1, i)*(x**i)*((1-x)**(self.N-1-i))*self.expected_payoffs(i)[0] for i in range(self.N)])
-        f_d = sum([comb(self.N-1, i)*(x**i)*((1-x)**(self.N-1-i))*self.expected_payoffs(i+1)[1] for i in range(self.N)])
+        payoffs = [self.expected_payoffs(i) for i in range(self.N+1)]
+        f_h = sum([comb(self.N-1, i)*(x**i)*((1-x)**(self.N-1-i))*payoffs[i][0] for i in range(self.N)])
+        f_d = sum([comb(self.N-1, i)*(x**i)*((1-x)**(self.N-1-i))*payoffs[i+1][1] for i in range(self.N)])
         return f_h, f_d
 
 

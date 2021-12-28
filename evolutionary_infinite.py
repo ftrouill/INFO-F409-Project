@@ -34,19 +34,26 @@ class InfiniteNPlayerHDGDynamics:
         # we use the direct analytical formula
         # developed in the paper
         return (x / self.N) * (
-            self.c_h * np.power(x, self.N)
-            + self.R * np.power(x, self.N - 1)
-            - self.N * self.c_h * x
-            + self.N * self.c_h
-            - self.R
-            - self.c_h
+                self.c_h * np.power(x, self.N)
+                + self.R * np.power(x, self.N - 1)
+                - self.N * self.c_h * x
+                + self.N * self.c_h
+                - self.R
+                - self.c_h
         )
 
     def plot_gradient(self):
         # generate array of states
         dove_strategy = np.linspace(0, 1, num=self.nb_states, dtype=np.float64)
         # compute gradient
-        G = np.array([self.compute_gradient_for_state(i) for i in dove_strategy])
+        # G = np.array([self.compute_gradient_for_state(i) for i in dove_strategy])
+        # G2 = np.array([x * (1 - x) *
+        #                (HDG(self.N, self.c_h, self.R).average_fitness_infinite_pop(x)[1] -
+        #                 HDG(self.N, self.c_h, self.R).average_fitness_infinite_pop(x)[0])
+        #                for x in dove_strategy])
+        # print(G)
+        # print(G2)
+        # print(G2 - G)
         # find saddle points
         epsilon = 1e-5
         saddle_points_idx = np.where((G <= epsilon) & (G >= -epsilon))[0]
@@ -66,6 +73,6 @@ class InfiniteNPlayerHDGDynamics:
 
 
 if __name__ == "__main__":
-    rep_dyn = InfiniteNPlayerHDGDynamics(5, 0.9, nb_states=10000)
+    rep_dyn = InfiniteNPlayerHDGDynamics(5, 0.9, nb_states=101)
     ax = rep_dyn.plot_gradient()
     plt.show()
