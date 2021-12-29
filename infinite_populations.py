@@ -247,9 +247,121 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
                     pass
         return unstable_equilibria, stable_equilibria
 
+    def compute_stable_equilibria(self, epsilon=1e-6):
+        """
+        Compute the stable equilibria for the current game
+
+        :param epsilon: tolerance for equilibrium points
+        :return: array of stable equilibria as fraction of doves
+        """
+        # array of states
+        dove_strategy = np.linspace(0, 1, num=self.nb_states, dtype=np.float64)
+        # find optimal state for each cost
+        equilibria = []
+        G = np.array([self.compute_gradient_for_state(i) for i in dove_strategy])
+        equilibria_idx = np.where((np.roll(G, -1) * G < 0) | (np.abs(G) <= epsilon))[0]
+        equilibria = equilibria_idx / (self.nb_states - 1)
+        # Check for x = 0 and x = 1
+        if G[1] > 0:
+            # We know G[0] = 0, so we check if it goes directly down with G[1] -> Unstable point
+            # Remove x = 0
+            equilibria = np.delete(equilibria, 0)
+        if G[-2] < 0:
+            # We know G[-1] = 0, so we check if it goes directly up with G[-2] -> Unstable point
+            # Remove x = 1
+            equilibria = np.delete(equilibria, -1)
+        return equilibria
+
+    @staticmethod
+    def get_phase(equilibria, epsilon=1e-6):
+        """
+        Give the phase based on the equilibria
+
+        :param equilibria: array of equilibria as fraction of doves
+        :param epsilon: tolerance for bi-stable states
+        :return: tuple of booleans to describe the phase (Doves, Hawks, Mixed)
+        """
+        has_full_dove = False
+        has_full_hawk = False
+        has_mixed = False
+        for equilibrium in equilibria:
+            if equilibrium > 1 - epsilon:
+                has_full_dove = True
+            elif equilibrium < epsilon:
+                has_full_hawk = True
+            else:
+                has_mixed = True
+        return has_full_dove, has_full_hawk, has_mixed
+
+    @staticmethod
+    def plot_phase_diagram(N, T, resolution_cost=100):
+        """
+        Plot the phase diagram for the given sample size N,
+        the threshold T and the resolution of the graph
+
+        :param N: sample size
+        :param T: threshold for doves
+        :param resolution_cost: will generate a grid of
+            resolution_cost x resolution_cost points
+        """
+        c_d_values = np.linspace(0, 1, resolution_cost)
+        c_h_values = np.linspace(0, 1, resolution_cost)
+        phase_dictionary = {
+            # (Doves, Hawks, Mixed)
+            (True, True, True): ("hawks + doves + mixed", "blue"),
+            (True, True, False): ("hawks + doves", "orange"),
+            (True, False, True): ("doves + mixed", "green"),
+            (True, False, False): ("doves", "red"),
+            (False, True, True): ("hawks + mixed", "purple"),
+            (False, True, False): ("hawks", "brown"),
+            (False, False, True): ("mixed", "pink"),
+            (False, False, False): ("no equilibrium", "grey"),
+        }
+        already_labeled = {
+            (True, True, True): False,
+            (True, True, False): False,
+            (True, False, True): False,
+            (True, False, False): False,
+            (False, True, True): False,
+            (False, True, False): False,
+            (False, False, True): False,
+            (False, False, False): False,
+        }
+        for c_d in c_d_values:
+            for c_h in c_h_values:
+                rep_dyn = InfiniteNPlayerHDGTDynamics(
+                    N, c_h, nb_states=100, T=T, c_d=c_d
+                )
+                equilibria = rep_dyn.compute_stable_equilibria()
+                phase = rep_dyn.get_phase(equilibria)
+                color = phase_dictionary[phase][1]
+                if not already_labeled[phase]:
+                    already_labeled[phase] = True
+                    plt.plot(
+                        [c_h],
+                        [c_d],
+                        label=phase_dictionary[phase][0],
+                        marker=".",
+                        markersize=10,
+                        color=color,
+                    )
+                else:
+                    plt.plot(
+                        [c_h],
+                        [c_d],
+                        marker=".",
+                        markersize=500 / resolution_cost,
+                        color=color,
+                    )
+        plt.title(f"T = {T}")
+        plt.legend()
+        plt.show()
+
 
 if __name__ == "__main__":
     # InfiniteNPlayerHDGDynamics.plot_hdg_gradient()
     # InfiniteNPlayerHDGDynamics.plot_hdg_equilibria()
     # hdgt = InfiniteNPlayerHDGTDynamics(N=30, c_h=0.2, R=1, c_d=0.2, T=0.4)
     InfiniteNPlayerHDGTDynamics.plot_c_h_equilibria(T=0.4)
+    # InfiniteNPlayerHDGTDynamics.plot_c_h_equilibria(T=0.6)
+    # InfiniteNPlayerHDGTDynamics.plot_phase_diagram(N = 5, T = 0.4, resolution_cost = 50)
