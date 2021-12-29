@@ -188,6 +188,12 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
         plt.show()
 
     def compute_stable_equilibria(self, epsilon = 1e-6):
+        """
+        Compute the stable equilibria for the current game
+        
+        :param epsilon: tolerance for equilibrium points
+        :return: array of stable equilibria as fraction of doves
+        """
         # array of states
         dove_strategy = np.linspace(0, 1, num=self.nb_states, dtype=np.float64)
         # find optimal state for each cost
@@ -210,6 +216,13 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
 
     @staticmethod
     def get_phase(equilibria, epsilon = 1e-6):
+        """
+        Give the phase based on the equilibria
+
+        :param equilibria: array of equilibria as fraction of doves
+        :param epsilon: tolerance for bi-stable states
+        :return: tuple of booleans to describe the phase (Doves, Hawks, Mixed)
+        """
         has_full_dove = False
         has_full_hawk = False
         has_mixed = False
@@ -224,6 +237,15 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
 
     @staticmethod
     def plot_phase_diagram(N, T, resolution_cost = 100):
+        """
+        Plot the phase diagram for the given sample size N, 
+        the threshold T and the resolution of the graph
+
+        :param N: sample size
+        :param T: threshold for doves
+        :param resolution_cost: will generate a grid of 
+            resolution_cost x resolution_cost points
+        """
         c_d_values = np.linspace(0, 1, resolution_cost)
         c_h_values = np.linspace(0, 1, resolution_cost)
         phase_dictionary = {
