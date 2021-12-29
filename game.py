@@ -1,7 +1,7 @@
 from typing import Tuple
-from math import comb
 import numpy as np
-from scipy.stats import hypergeom
+from scipy.stats import hypergeom, binom
+from time import perf_counter
 
 import unittest
 
@@ -33,20 +33,17 @@ class HDG:
             return (self.R - (n_hawks - 1) * self.c_h) / n_hawks, 0.0
 
     def average_fitness_infinite_pop(self, x: float) -> Tuple[float, float]:
+        b = [binom.pmf(i, self.N-1, x) for i in range(self.N)]
         f_h = sum(
             [
-                comb(self.N - 1, i)
-                * (x ** i)
-                * ((1 - x) ** (self.N - 1 - i))
+                b[i]
                 * self.expected_payoffs(i)[0]
                 for i in range(self.N)
             ]
         )
         f_d = sum(
             [
-                comb(self.N - 1, i)
-                * (x ** i)
-                * ((1 - x) ** (self.N - 1 - i))
+                b[i]
                 * self.expected_payoffs(i + 1)[1]
                 for i in range(self.N)
             ]
@@ -61,6 +58,8 @@ class HDG:
         ----------
         k: int
             Number of doves in the population.
+        z: int
+            Size of the finite population.
 
         Returns
         -------
@@ -72,8 +71,8 @@ class HDG:
             payoff_hawk, _ = self.expected_payoffs(i)
             _, payoff_dove = self.expected_payoffs(i + 1)
 
-            fh += hypergeom(Z - 1, k, self.N - 1).pmf(i) * payoff_hawk
-            fd += hypergeom(Z - 1, k - 1, self.N - 1).pmf(i) * payoff_dove
+            fh += hypergeom.pmf(i, Z - 1, k, self.N - 1) * payoff_hawk
+            fd += hypergeom.pmf(i, Z - 1, k - 1, self.N - 1) * payoff_dove
 
         return fh, fd
 
@@ -122,12 +121,13 @@ class HGDTTest(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    # petits tests pour verifier que ça fonctionne
-    # print(HDG(30, 30, 0.5).expected_payoffs())
-    # print(HDG(30, 29, 0.5).expected_payoffs())
-    # print(HDG(30, 28, 0.5).expected_payoffs())
-    # print(HDG(30, 25, 0.5).expected_payoffs())
-    # print(HDG_T(30, 28, 0.5, 0.2, 0.2).expected_payoffs())
-    # print(HDG_T(30, 28, 0.5, 0.5, 0.2).expected_payoffs())
-    # print(HDG_T(30, 28, 0.5, 0.9, 0.2).expected_payoffs())
     unittest.main(verbosity=2)
+    # hdg = HDG(30, 28)
+    # now = perf_counter()
+    # for i in range(100):
+    #     hdg.average_fitness_infinite_pop(i/100)
+    # print(f"infinite: {perf_counter() - now}")
+    # now = perf_counter()
+    # for i in range(100):
+    #     hdg.average_fitness_finite_pop(i, 100)
+    # print(f"finite: {perf_counter() - now}")
