@@ -1,3 +1,4 @@
+from math import comb
 from typing import Tuple
 import numpy as np
 from scipy.stats import hypergeom, binom
@@ -33,7 +34,7 @@ class HDG:
             return (self.R - (n_hawks - 1) * self.c_h) / n_hawks, 0.0
 
     def average_fitness_infinite_pop(self, x: float) -> Tuple[float, float]:
-        b = [binom.pmf(i, self.N-1, x) for i in range(self.N)]
+        b = binom.pmf(range(self.N), self.N-1, x)
         f_h = sum(
             [
                 b[i]
@@ -67,12 +68,14 @@ class HDG:
         """
         fd = 0
         fh = 0
+        hyp_h = hypergeom.pmf(range(self.N), Z - 1, k, self.N - 1)
+        hyp_d = hypergeom.pmf(range(self.N), Z - 1, k - 1, self.N - 1)
         for i in range(self.N):
             payoff_hawk, _ = self.expected_payoffs(i)
             _, payoff_dove = self.expected_payoffs(i + 1)
 
-            fh += hypergeom.pmf(i, Z - 1, k, self.N - 1) * payoff_hawk
-            fd += hypergeom.pmf(i, Z - 1, k - 1, self.N - 1) * payoff_dove
+            fh += hyp_h[i] * payoff_hawk
+            fd += hyp_d[i] * payoff_dove
 
         return fh, fd
 
@@ -129,5 +132,5 @@ if __name__ == "__main__":
     # print(f"infinite: {perf_counter() - now}")
     # now = perf_counter()
     # for i in range(100):
-    #     hdg.average_fitness_finite_pop(i, 100)
+    #     hdg.average_fitness_finite_pop(i, 1000)
     # print(f"finite: {perf_counter() - now}")
