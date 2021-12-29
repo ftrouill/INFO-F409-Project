@@ -202,6 +202,13 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
         plt.show()
 
     def compute_hdgt_equilibria_cost_c_h(self) -> Tuple[Dict, Dict]:
+        """Computes stable and unstable equilibria for different c_h values.
+
+        Returns
+        -------
+        Tuple[Dict, Dict]
+            Unstable and stable equilibria as dict(cost, equilibria)
+        """
         # array of different costs
         costs = np.linspace(0, 1, num=self.nb_costs, dtype=np.float64)
         # array of states
