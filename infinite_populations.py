@@ -74,8 +74,10 @@ class InfiniteNPlayerHDGDynamics:
         # print(G2)
         # print(G2 - G)
         # find saddle points
-        epsilon = 1e-5
-        saddle_points_idx = np.where((G <= epsilon) & (G >= -epsilon))[0]
+        epsilon = 1e-6
+        saddle_points_idx = np.where((np.roll(G, -1) * G < 0) | (np.abs(G) <= epsilon))[
+            0
+        ]
         saddle_points = saddle_points_idx / (self.nb_states - 1)
         saddle_type, gradient_direction = find_saddle_type_and_gradient_direction(
             G, saddle_points_idx
@@ -94,7 +96,7 @@ class InfiniteNPlayerHDGDynamics:
         ax.set_label(self.c_h)
         return ax
 
-    def compute_equilibria_cost(self):
+    def compute_hdg_equilibria_cost_c_h(self):
         # array of different costs
         costs = np.linspace(0, 1, num=self.nb_costs, dtype=np.float64)
         # array of states
@@ -108,8 +110,13 @@ class InfiniteNPlayerHDGDynamics:
             G = np.array([self.compute_gradient_for_state(i) for i in dove_strategy])
             # remove first and last point
             G = G[1:-1]
-            # get the equilibria as the point closest to 0
-            equilibria[i] = np.argmin(np.abs(G)) / self.nb_states
+            epsilon = 1e-6
+            saddle_points_idx = np.where(
+                (np.roll(G, -1) * G < 0) | (np.abs(G) <= epsilon)
+            )[0]
+            saddle_points = saddle_points_idx / (self.nb_states - 1)
+            if saddle_points.size > 0:
+                equilibria[i] = saddle_points[0]
         return equilibria
 
     @staticmethod
@@ -140,7 +147,7 @@ class InfiniteNPlayerHDGDynamics:
         N_values = [5, 10, 20, 50, 100]
         for N in N_values:
             rep_dyn = InfiniteNPlayerHDGDynamics(N, 0.9, nb_states=10000)
-            eq = rep_dyn.compute_equilibria_cost()
+            eq = rep_dyn.compute_hdg_equilibria_cost_c_h()
             plt.plot(np.linspace(0, 1, rep_dyn.nb_costs), eq, label=N)
         plt.legend()
         plt.show()
@@ -168,9 +175,20 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
         # compute gradient
         return x * (1 - x) * (f_d - f_h)
 
+    @staticmethod
+    def plot_c_h_equilibria(N=5, T=0.2):
+        c_d_values = [0.2, 0.5, 0.8]
+        for c_d in c_d_values:
+            print(c_d)
+            rep_dyn = InfiniteNPlayerHDGTDynamics(N, 0.9, nb_states=10000, T=T, c_d=c_d)
+            eq = rep_dyn.compute_hdg_equilibria_cost_c_h()
+            plt.plot(np.linspace(0, 1, rep_dyn.nb_costs), eq, label=N)
+        plt.legend()
+        plt.show()
+
 
 if __name__ == "__main__":
     # InfiniteNPlayerHDGDynamics.plot_hdg_gradient()
     # InfiniteNPlayerHDGDynamics.plot_hdg_equilibria()
-    hdgt = InfiniteNPlayerHDGTDynamics(N=30, c_h=0.2, R=1, c_d=0.2, T=0.4)
-    print(hdgt.compute_gradient_for_state(0.5))
+    # hdgt = InfiniteNPlayerHDGTDynamics(N=30, c_h=0.2, R=1, c_d=0.2, T=0.4)
+    InfiniteNPlayerHDGTDynamics.plot_c_h_equilibria(T=0.6)
