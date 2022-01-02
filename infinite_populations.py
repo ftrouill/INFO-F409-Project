@@ -188,14 +188,38 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
             plt.plot(
                 st_eq.keys(),
                 st_eq.values(),
-                label=N,
+                label=f"$c_d={c_d}$",
                 color=color,
             )
             plt.plot(
                 un_eq.keys(),
                 un_eq.values(),
                 "--",
-                label=N,
+                label=f"$c_d={c_d}$",
+                color=color,
+            )
+        plt.legend()
+        plt.show()
+
+    @staticmethod
+    def plot_c_d_equilibria(N=5, T=0.2):
+        c_h_values = [0.2, 0.5, 0.8]
+        colors = ["red", "blue", "black"]
+        for c_h, color in zip(c_h_values, colors):
+            print(c_h)
+            rep_dyn = InfiniteNPlayerHDGTDynamics(N, c_h, nb_states=10000, T=T)
+            un_eq, st_eq = rep_dyn.compute_hdgt_equilibria_cost_c_d()
+            plt.plot(
+                st_eq.keys(),
+                st_eq.values(),
+                label=f"$c_H={c_h}$",
+                color=color,
+            )
+            plt.plot(
+                un_eq.keys(),
+                un_eq.values(),
+                "--",
+                label=f"$c_H={c_h}$",
                 color=color,
             )
         plt.legend()
@@ -226,11 +250,54 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
                 (np.roll(G, -1) * G < 0) | (np.abs(G) <= epsilon)
             )[0]
             saddle_points = saddle_points_idx / (self.nb_states - 1)
-            # remove points too close to the beginning or the end
-            # saddle_points = np.delete(
-            #     saddle_points,
-            #     np.where((saddle_points <= 1e-2) | (saddle_points >= 1 - 1e-2)),
-            # )
+            print(c)
+            print(saddle_points)
+            if saddle_points.size > 2:
+                # TODO split stable and unstable
+                saddle_types = find_saddle_type_and_gradient_direction(
+                    G, saddle_points_idx
+                )[0]
+                # remove first and last equilibria
+                saddle_points = saddle_points[1:-1]
+                saddle_types = saddle_types[1:-1]
+                # use min() to remove duplicates
+                try:
+                    unstable_equilibria[c] = saddle_points[~saddle_types].max()
+                except ValueError:
+                    # there is no unstable equilibrium; pass
+                    pass
+                try:
+                    stable_equilibria[c] = saddle_points[saddle_types].max()
+                except ValueError:
+                    # there is no unstable equilibrium
+                    pass
+        return unstable_equilibria, stable_equilibria
+
+    def compute_hdgt_equilibria_cost_c_d(self) -> Tuple[Dict, Dict]:
+        """Computes stable and unstable equilibria for different c_d values.
+
+        Returns
+        -------
+        Tuple[Dict, Dict]
+            Unstable and stable equilibria as dict(cost, equilibria)
+        """
+        # array of different costs
+        costs = np.linspace(0, 1, num=self.nb_costs, dtype=np.float64)
+        # array of states
+        dove_strategy = np.linspace(0, 1, num=self.nb_states, dtype=np.float64)
+        # find optimal state for each cost
+        unstable_equilibria = dict()
+        stable_equilibria = dict()
+        for i, c in enumerate(costs):
+            # update cost
+            self.c_d = c
+            # compute gradient for each state
+            G = np.array([self.compute_gradient_for_state(i) for i in dove_strategy])
+            epsilon = 1e-6
+            saddle_points_idx = np.where(
+                (np.roll(G, -1) * G < 0) | (np.abs(G) <= epsilon)
+            )[0]
+            saddle_points = saddle_points_idx / (self.nb_states - 1)
             print(c)
             print(saddle_points)
             if saddle_points.size > 2:
@@ -369,6 +436,7 @@ if __name__ == "__main__":
     # InfiniteNPlayerHDGDynamics.plot_hdg_gradient()
     # InfiniteNPlayerHDGDynamics.plot_hdg_equilibria()
     # hdgt = InfiniteNPlayerHDGTDynamics(N=30, c_h=0.2, R=1, c_d=0.2, T=0.4)
-    InfiniteNPlayerHDGTDynamics.plot_c_h_equilibria(T=0.4)
+    # InfiniteNPlayerHDGTDynamics.plot_c_h_equilibria(T=0.4)
+    InfiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=0.4)
     # InfiniteNPlayerHDGTDynamics.plot_c_h_equilibria(T=0.6)
     # InfiniteNPlayerHDGTDynamics.plot_phase_diagram(N = 5, T = 0.4, resolution_cost = 50)
