@@ -2,9 +2,10 @@ from dataclasses import dataclass
 from typing import Tuple
 import numpy as np
 from igraph import Graph
-from numpy.lib.function_base import gradient
+from numpy.lib.function_base import append, gradient
 
 from game import HDG
+
 
 class Lattice2d:
     """
@@ -47,7 +48,7 @@ class Lattice2d:
 
     def get_neighborhood_conformation(self, id: int) -> tuple[int,int]:
         """
-        Return a tuple of int containing the number of Dove and then the number of Hawk in the neighborhood
+        Return a tuple of int containing the number of Hawk and  the number of Dove in the neighborhood
 
         Parameters
         ----------
@@ -65,11 +66,14 @@ class Lattice2d:
             else:
                 nb_dove += 1
         
-        return (nb_dove, nb_hawk)
+        return (nb_hawk, nb_dove)
 
 
-    def get_number_neigbors(self) -> int:
+    def get_number_neighbors(self) -> int:
         return len(self.graph.neighbors(0))
+
+    def get_neighbors(self, index: int) -> list:
+        return self.graph.neighbors(index)
     
     def get_vertices(self):
         return self.graph.vs
@@ -81,28 +85,64 @@ class Lattice2d:
 
 class InfiniteNPlayerHDGNetworkDynamic:
 
+    CONST_HAWK = 0
+    CONST_DOVE = 1
+    CONST_W = 5
+
     def __init__(self, c_h: float, R: float, width: int, height: int, radius: int, population: list) -> None:
         # generate the network that contains all the information/method concerning the graph
         self.network = Lattice2d(width, height, radius)
         self.network.fill_graph(population)
 
         # Create a game with N = numbers of neigbhorhood of each vertices
-        self.game = HDG(self.network.get_number_neigbors(), c_h, R)
+        self.game = HDG(self.network.get_number_neighbors()+1, c_h, R)
 
     def update(self):
+        gain_i_list = []
+        gain_j_list = []
+        change_list = []
         vertices = self.network.get_vertices()
-        if()
-        for i in range( len(vertices):
-            print(i)
-            nb_dove = self.network.get_neighborhood_conformation(i)[0]
-            gain = self.game.expected_payoffs(nb_dove)
-            print(gain)
+        for i in range(len(vertices)):
+            # For Hawk the strategy is zero and for Dove it is 1
+            strategy = self.CONST_HAWK
+            value_string = vertices[i].attributes()["value"]
+            if( value_string == "D"):
+                strategy = self.CONST_DOVE
+
+            nb_dove = self.network.get_neighborhood_conformation(i)[1] + strategy
+            gains = self.game.expected_payoffs(nb_dove)
+            gain_i_list.append(gains[strategy])
+
+            neis = self.network.get_neighbors(i)
+            index_selected = np.random.randint(0,len(neis))
+            # If the selected neighbor is of the same type we put -1 if not we put Gj 
+            if(vertices[neis[index_selected]].attributes()["value"] == value_string):
+                gain_j_list.append(-1) 
+                change_list.append(0)
+            else:
+                gain_j_list.append(gains[not strategy])
+                # We need to calculate the probability of changing the strategy of the vertice i p = 1/(1+exp(-w*(G_i-G_j)))
+                proba = 1/(1+ np.exp(-self.CONST_W*( gains[not strategy] - gains[strategy])))
+                print(proba)
+                if( np.random.random() <= proba):
+                    change_list.append(1)
+                else:
+                    change_list.append(0)
+
+        for id,elem in enumerate(change_list):
+            if(elem == 1):
+                value_string = vertices[id].attributes()["value"]
+                if( value_string == "D"):
+                    vertices[id].attributes()["value"] == "H"
+                else:
+                    vertices[id].attributes()["value"] == "D"
+        
 
 if __name__ == "__main__":
     D = "D"
     H = "H"
-    N = [H for i in range(24)]
-    N.append(D)
+    N = [D for i in range(24)]
+    N.append(H)
 
     w = 5
     h = 5
