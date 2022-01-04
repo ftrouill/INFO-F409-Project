@@ -321,7 +321,7 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
                     pass
         return unstable_equilibria, stable_equilibria
 
-    def compute_stable_equilibria(self, epsilon=1e-6):
+    def compute_stable_equilibria(self, epsilon=1e-6) -> list:
         """
         Compute the stable equilibria for the current game
 
@@ -347,7 +347,7 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
         return equilibria
 
     @staticmethod
-    def get_phase(equilibria, epsilon=1e-6):
+    def get_phase(equilibria, epsilon=1e-6) -> Tuple[bool, bool, bool]:
         """
         Give the phase based on the equilibria
 
@@ -368,7 +368,7 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
         return has_full_dove, has_full_hawk, has_mixed
 
     @staticmethod
-    def plot_phase_diagram(N, T, resolution_cost=100):
+    def plot_phase_diagram(N, T, resolution_cost=100) -> None:
         """
         Plot the phase diagram for the given sample size N,
         the threshold T and the resolution of the graph
@@ -436,7 +436,7 @@ if __name__ == "__main__":
     # InfiniteNPlayerHDGDynamics.plot_hdg_gradient()
     # InfiniteNPlayerHDGDynamics.plot_hdg_equilibria()
     # hdgt = InfiniteNPlayerHDGTDynamics(N=30, c_h=0.2, R=1, c_d=0.2, T=0.4)
-    # InfiniteNPlayerHDGTDynamics.plot_c_h_equilibria(T=0.4)
-    InfiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=0.4)
+    InfiniteNPlayerHDGTDynamics.plot_c_h_equilibria(T=0.4)
+    # InfiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=0.4)
     # InfiniteNPlayerHDGTDynamics.plot_c_h_equilibria(T=0.6)
     # InfiniteNPlayerHDGTDynamics.plot_phase_diagram(N = 5, T = 0.4, resolution_cost = 50)
