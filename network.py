@@ -1,8 +1,9 @@
-from dataclasses import dataclass
-from typing import Tuple
 import numpy as np
 from igraph import Graph
-from numpy.lib.function_base import append, gradient
+from numpy.core.fromnumeric import mean
+from numpy.random.mtrand import binomial
+import matplotlib.pyplot as plt
+
 
 from game import HDG
 
@@ -54,6 +55,8 @@ class Lattice2d:
         ----------
         id : list, id of the vertice at for which we want to know the neighborhood.
         """
+        if( (id > self.w*self.h-1) or id<0):
+            raise NameError("Id is invalid")
 
         neis = self.graph.neighbors(id)
         vertices = self.graph.vs
@@ -61,10 +64,8 @@ class Lattice2d:
         nb_hawk = 0
 
         for elem in neis:
-            if( vertices[elem].attributes()["value"] == "H"):
-                nb_hawk += 1
-            else:
-                nb_dove += 1
+            nb_dove += vertices[elem].attributes()["value"]
+        nb_hawk = len(neis)-nb_dove
         
         return (nb_hawk, nb_dove)
 
@@ -94,7 +95,7 @@ class InfiniteNPlayerHDGNetworkDynamic:
         self.network = Lattice2d(width, height, radius)
         self.network.fill_graph(population)
 
-        # Create a game with N = numbers of neigbhorhood of each vertices
+        # Create a game with N = numbers of neigbhorhood of each vertices  + the one being tested
         self.game = HDG(self.network.get_number_neighbors()+1, c_h, R)
 
     def update(self):
@@ -104,10 +105,7 @@ class InfiniteNPlayerHDGNetworkDynamic:
         vertices = self.network.get_vertices()
         for i in range(len(vertices)):
             # For Hawk the strategy is zero and for Dove it is 1
-            strategy = self.CONST_HAWK
-            value_string = vertices[i].attributes()["value"]
-            if( value_string == "D"):
-                strategy = self.CONST_DOVE
+            strategy = vertices[i].attributes()["value"]
 
             nb_dove = self.network.get_neighborhood_conformation(i)[1] + strategy
             gains = self.game.expected_payoffs(nb_dove)
@@ -116,42 +114,73 @@ class InfiniteNPlayerHDGNetworkDynamic:
             neis = self.network.get_neighbors(i)
             index_selected = np.random.randint(0,len(neis))
             # If the selected neighbor is of the same type we put -1 if not we put Gj 
-            if(vertices[neis[index_selected]].attributes()["value"] == value_string):
+            if(vertices[neis[index_selected]].attributes()["value"] == strategy):
                 gain_j_list.append(-1) 
                 change_list.append(0)
             else:
                 gain_j_list.append(gains[not strategy])
                 # We need to calculate the probability of changing the strategy of the vertice i p = 1/(1+exp(-w*(G_i-G_j)))
                 proba = 1/(1+ np.exp(-self.CONST_W*( gains[not strategy] - gains[strategy])))
-                print(proba)
                 if( np.random.random() <= proba):
                     change_list.append(1)
                 else:
                     change_list.append(0)
 
+        new_pop = []
         for id,elem in enumerate(change_list):
+            new_strat = vertices[id].attributes()["value"]
             if(elem == 1):
-                value_string = vertices[id].attributes()["value"]
-                if( value_string == "D"):
-                    vertices[id].attributes()["value"] == "H"
-                else:
-                    vertices[id].attributes()["value"] == "D"
-        
+                new_strat = int(not (new_strat))
+            new_pop.append(new_strat)
+
+        self.network.fill_graph(new_pop)
+
+    def calculate_dove_ratio(self):
+        value_list = self.network.graph.vs()["value"]
+        return sum(value_list)/len(value_list)
+
+    @staticmethod
+    def generate_population(size: int, ratio_dove: float) -> list:
+        if( ratio_dove > 1 or ratio_dove < 0):
+            raise NameError("Invalid ratio of doves")
+    
+        binomial_samples = np.random.binomial(1,ratio_dove,size)
+
+        return binomial_samples
+
+
 
 if __name__ == "__main__":
-    D = "D"
-    H = "H"
-    N = [D for i in range(24)]
-    N.append(H)
-
-    w = 5
-    h = 5
-    radius = 1
+    w = 50
+    h = 50
+    x = 0.5
+    radius = 2
     R = 1.0
-    c_h = 0.2
+    c_h_list = [i/10 for i in range(11)]
+    results = []
 
-    obj = InfiniteNPlayerHDGNetworkDynamic(c_h=c_h, R=R, width=w, height=h, population=N, radius=radius)
-    obj.update()
+    nb_saved = 5
+    steps = 10
 
+    # We iterate over all values of c_h and simulate for each the comportement of a population randomly sample with a
+    # fixed ratio of dove/hawk and save the ratio of dove at the end of each loop of a c_h
+    for elem in c_h_list:
+        pop = InfiniteNPlayerHDGNetworkDynamic.generate_population(w*h, x)
+        obj = InfiniteNPlayerHDGNetworkDynamic(c_h=elem, R=R, width=w, height=h, population=pop, radius=radius)
+
+        list_values = []
+        for i in range(steps):
+            if(i >= steps-nb_saved):
+                list_values.append(obj.calculate_dove_ratio())
+            obj.update()
+
+        results.append(np.around(mean(list_values),decimals=4))
+        print("End of step : " + str(elem) )
+    
+    print(results)
+
+    plt.figure(figsize=(10,10))
+    plt.plot(c_h_list, results)
+    plt.show()
     
     
