@@ -111,6 +111,7 @@ class FiniteNPlayerHDGDynamics:
             for j, c in enumerate(costs):
                 rep_dyn = FiniteNPlayerHDGDynamics(Z=z, N=N, w=1)
                 rep_dyn.plot_gradient_selection(c, markers[i], edge_colors[i], face_colors[(z, c)], f'$Z = {z}, c_H = {c}$')
+        plt.plot([0,1], [0,0], color='black')
         plt.xlabel(f'$k/Z$')
         plt.ylabel(f'G(k)')
         plt.xlim(0, 1)
@@ -360,14 +361,14 @@ def plot_equilibria(Z: int, w: float):
 
 if __name__ == "__main__":
     #finite = FiniteNPlayerHDGDynamics(Z=100, )
-    #FiniteNPlayerHDGDynamics.plot_hdg_gradient()
+    FiniteNPlayerHDGDynamics.plot_hdg_gradient()
     #fig, gradient = finite.plot_gradient_selection(0.5)
     #plt.show()
     #gradient[40] = 0.0
     #print(gradient[39:44])
     #print(finite.find_equilibrium(gradient))
     #plot_equilibria(100, 1)
-    FiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=0.8)
+    #FiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=0.8)
 
 
 
