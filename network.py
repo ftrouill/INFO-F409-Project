@@ -1,7 +1,7 @@
+import matplotlib
 import numpy as np
 from igraph import Graph
-from numpy.core.fromnumeric import mean
-from numpy.random.mtrand import binomial
+from numpy.core.fromnumeric import mean, size
 import matplotlib.pyplot as plt
 
 
@@ -151,36 +151,52 @@ class InfiniteNPlayerHDGNetworkDynamic:
 
 
 if __name__ == "__main__":
-    w = 50
-    h = 50
-    x = 0.5
-    radius = 2
-    R = 1.0
-    c_h_list = [i/10 for i in range(11)]
-    results = []
 
-    nb_saved = 5
-    steps = 10
+    if False: 
+        w = 50
+        h = 50
+        x = 0.5
+        radius_list = [i for i in range(1,5)]
+        R = 1.0
+        c_h_list = [i/100 for i in range(101)]
+        results = []
+        
 
-    # We iterate over all values of c_h and simulate for each the comportement of a population randomly sample with a
-    # fixed ratio of dove/hawk and save the ratio of dove at the end of each loop of a c_h
-    for elem in c_h_list:
-        pop = InfiniteNPlayerHDGNetworkDynamic.generate_population(w*h, x)
-        obj = InfiniteNPlayerHDGNetworkDynamic(c_h=elem, R=R, width=w, height=h, population=pop, radius=radius)
+        nb_saved = 5
+        steps = 40
 
-        list_values = []
-        for i in range(steps):
-            if(i >= steps-nb_saved):
-                list_values.append(obj.calculate_dove_ratio())
-            obj.update()
+        results = []
+        N_list = []
+        for radius in radius_list:
+            result = []
+            # We iterate over all values of c_h and simulate for each the comportement of a population randomly sample with a
+            # fixed ratio of dove/hawk and save the ratio of dove at the end of each loop of a c_h
+            for elem in c_h_list:
+                pop = InfiniteNPlayerHDGNetworkDynamic.generate_population(w*h, x)
+                obj = InfiniteNPlayerHDGNetworkDynamic(c_h=elem, R=R, width=w, height=h, population=pop, radius=radius)
 
-        results.append(np.around(mean(list_values),decimals=4))
-        print("End of step : " + str(elem) )
-    
-    print(results)
+                list_values = []
+                for i in range(steps):
+                    if(i >= steps-nb_saved):
+                        list_values.append(obj.calculate_dove_ratio())
+                    obj.update()
 
-    plt.figure(figsize=(10,10))
-    plt.plot(c_h_list, results)
-    plt.show()
+                result.append(np.around(mean(list_values),decimals=4))
+                print("End of step : " + str(elem) )
+            
+            results.append(result)
+            N_list.append(obj.network.get_number_neighbors())
+        print("Neighbor numbers list")
+        print(N_list)
+
+        plt.figure(figsize=(10,10))
+        plt.axis([0,1,0,1])
+        plt.xlabel("c_h")
+        plt.ylabel("x*")
+        for elem in results:
+            plt.plot(c_h_list, elem)
+            plt.scatter(c_h_list, elem)
+        plt.show()
+
     
     
