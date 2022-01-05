@@ -85,6 +85,19 @@ class Lattice2d:
             print(v)
 
 class InfiniteNPlayerHDGNetworkDynamic:
+    """
+    Class that will generate a network as a 2dLattice and include the methods used to update the graph following a game 
+    payoff matrix.
+
+    Parameters
+    ----------
+    c_h : float, Cost for the hawks
+    R : float, Reward
+    width : int, dim of the 2dlattice
+    height : int, dim of the 2dlattice
+    radius : int, radius use to generate edges ine the lattice (cf lattice)
+    population : list, list of values to put in the graph (each vertice will contain a value)
+    """
 
     CONST_HAWK = 0
     CONST_DOVE = 1
@@ -99,6 +112,15 @@ class InfiniteNPlayerHDGNetworkDynamic:
         self.game = HDG(self.network.get_number_neighbors()+1, c_h, R)
 
     def update(self):
+        """
+        Update the graph vertices values by following the process:
+            - Calculate a G_i (gain) for the vertice i by playing against all the neighbor link to this vertex
+            - Select a vertex j in the neighborhood
+            - If the strategy of j !=i then we calculate G_j as if i was of type j
+            - Calculate the probablity of replacing i by j by following a fermi function
+            - Update the graph vertices with the new list of values
+        """
+
         gain_i_list = []
         gain_j_list = []
         change_list = []
