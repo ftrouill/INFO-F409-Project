@@ -26,7 +26,7 @@ class FiniteNPlayerHDGDynamics:
     N: int
     w: float
 
-    def gradient_selection(self, k: int, c_h: float) -> float:
+    def gradient_selection(self, k: int, c_h: float, mu: float = 0.0) -> float:
         """
         Compute the gradient of selection for given value of k.
 
@@ -41,14 +41,13 @@ class FiniteNPlayerHDGDynamics:
         -------
             gradient of selection for given k.
         """
-
         fh, fd = HDG(self.N, c_h).average_fitness_finite_pop(k, self.Z)
 
         weighted_diff = self.w * (fd - fh)
         pop_factor = (k * (self.Z - k)) / (self.Z ** 2)
 
-        T_plus = pop_factor / (1 + np.exp(-weighted_diff))
-        T_minus = pop_factor / (1 + np.exp(weighted_diff))
+        T_plus = (1 - mu) * pop_factor / (1 + np.exp(-weighted_diff)) + mu * ((self.Z - k)/self.Z)
+        T_minus = (1 - mu) * pop_factor / (1 + np.exp(weighted_diff)) + mu * (k/self.Z)
 
         return T_plus - T_minus
 
@@ -67,7 +66,7 @@ class FiniteNPlayerHDGDynamics:
         """
         k_values = np.arange(self.Z + 1)
 
-        gradient = np.array([self.gradient_selection(k, c_h) for k in k_values])
+        gradient = np.array([self.gradient_selection(k, c_h, mu=0) for k in k_values])
 
         return k_values, gradient
 
@@ -135,9 +134,8 @@ class FiniteNPlayerHDGDynamics:
         """
         gradient = gradient[1:-1]
 
-        equilibrium = np.argmin(np.abs(gradient))
-
-        return equilibrium if equilibrium != 0 else np.nan
+        equilibrium = np.where(gradient[:-1] * gradient[1:] <= 0)[0]
+        return equilibrium[0] if len(equilibrium) != 0 else np.nan
 
 @dataclass
 class FiniteNPlayerHDGTDynamics(FiniteNPlayerHDGDynamics):
@@ -154,7 +152,7 @@ class FiniteNPlayerHDGTDynamics(FiniteNPlayerHDGDynamics):
     c_d: float = 0.5
     T: float = 0.5
 
-    def gradient_selection(self, k: int, c_h: float) -> float:
+    def gradient_selection(self, k: int, c_h: float ,mu: float = 0.0) -> float:
         """
         Compute the gradient of selection for given value of k.
 
@@ -169,14 +167,13 @@ class FiniteNPlayerHDGTDynamics(FiniteNPlayerHDGDynamics):
         -------
             gradient of selection for given k.
         """
-
         fh, fd = HDG_T(self.N, c_h, c_d=self.c_d, T=self.T).average_fitness_finite_pop(k, self.Z)
 
         weighted_diff = self.w * (fd - fh)
         pop_factor = (k * (self.Z - k)) / (self.Z ** 2)
 
-        T_plus = pop_factor / (1 + np.exp(-weighted_diff))
-        T_minus = pop_factor / (1 + np.exp(weighted_diff))
+        T_plus = (1 - mu) * pop_factor / (1 + np.exp(-weighted_diff)) + mu * ((self.Z - k)/self.Z)
+        T_minus = (1 - mu) * pop_factor / (1 + np.exp(weighted_diff)) + mu * (k/self.Z)
 
         return T_plus - T_minus
 
@@ -311,6 +308,7 @@ class FiniteNPlayerHDGTDynamics(FiniteNPlayerHDGDynamics):
         plt.xlabel(f'$c_H$')
         plt.ylabel(f'$k^*/Z$')
         plt.legend()
+        #plt.savefig(f"figures/raw/fig5_mu/c_h_0_{str(T)[-1]}.png")
         plt.show()
     
     @staticmethod
@@ -358,6 +356,7 @@ class FiniteNPlayerHDGTDynamics(FiniteNPlayerHDGDynamics):
         plt.xlabel(f'$c_D$')
         plt.ylabel(f'$k^*/Z$')
         plt.legend()
+        #plt.savefig(f"figures/raw/fig5_mu/c_D_0_{str(T)[-1]}.png")
         plt.show()
 
 def plot_equilibria(Z: int, w: float):
@@ -404,7 +403,8 @@ if __name__ == "__main__":
     #print(gradient[39:44])
     #print(finite.find_equilibrium(gradient))
     #plot_equilibria(100, 1)
-    FiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=0.4)
+    for T in [0.2, 0.4, 0.6, 0.8]:
+        FiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=T)
 
 
 
