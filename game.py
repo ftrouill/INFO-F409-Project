@@ -78,6 +78,9 @@ class HDG:
             fd += hyp_d[i] * payoff_dove
 
         return fh, fd
+    
+    def set_N(self, N: int) -> None:
+        self.N = N
 
 
 class HDGTest(unittest.TestCase):
