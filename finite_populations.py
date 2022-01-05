@@ -71,7 +71,7 @@ class FiniteNPlayerHDGDynamics:
 
         return k_values, gradient
 
-    def plot_gradient_selection(self, c_h: float) -> plt.Figure:
+    def plot_gradient_selection(self, c_h: float, marker: str, edge_color: str, face_color: str, label: str):
         """
         Plot the gradient of selection as function of the fraction k/Z.
         Parameters
@@ -84,13 +84,40 @@ class FiniteNPlayerHDGDynamics:
         """
 
         k_values, gradient = self.compute_full_gradient(c_h)
+        plt.plot(k_values / self.Z, gradient, marker=marker, markerfacecolor=face_color, markeredgecolor=edge_color, label=label, linestyle="None")
 
-        fig = plt.figure()
-        plt.plot(k_values / self.Z, gradient)
-        plt.xlabel("k/Z")
-        plt.ylabel("G(k)")
+    @staticmethod
+    def plot_hdg_gradient(N=5) -> None:
+        """Plots replicator gradient for different cost values.
 
-        return fig
+        Parameters
+        ----------
+        N : int, optional
+            Sample size, by default 5
+        """
+        costs = [0.1, 0.5]
+        Z = [10, 20, 100]
+        markers = ["o", "D", "s"]
+        edge_colors = ['blue', 'green', 'red']
+        face_colors = {
+            (10, 0.1): 'blue',
+            (10, 0.5): 'None',
+            (20, 0.1): 'green',
+            (20, 0.5): 'None',
+            (100, 0.1): 'red',
+            (100, 0.5): 'None'
+        }
+        for i, z in enumerate(Z):
+            for j, c in enumerate(costs):
+                rep_dyn = FiniteNPlayerHDGDynamics(Z=z, N=N, w=1)
+                rep_dyn.plot_gradient_selection(c, markers[i], edge_colors[i], face_colors[(z, c)], f'$Z = {z}, c_H = {c}$')
+        plt.xlabel(f'$k/Z$')
+        plt.ylabel(f'G(k)')
+        plt.xlim(0, 1)
+        plt.ylim(-0.06, 0.02)
+        plt.legend()
+        plt.title("Gradient of selection of the N-person HDG in finite populations")
+        plt.show()
 
     @staticmethod
     def find_equilibrium(gradient: np.ndarray):
@@ -181,7 +208,7 @@ class FiniteNPlayerHDGTDynamics(FiniteNPlayerHDGDynamics):
             saddle_types = find_saddle_type_and_gradient_direction(
                 G, saddle_points_idx
             )[0]
-            # remove first and last equilibria
+
             saddle_points = saddle_points[1:-1]
             saddle_types = saddle_types[1:-1]
             # use min() to remove duplicates
@@ -196,7 +223,7 @@ class FiniteNPlayerHDGTDynamics(FiniteNPlayerHDGDynamics):
                 # there is no unstable equilibrium
                 pass
         return unstable_equilibria, stable_equilibria
-
+    
     def compute_hdgt_equilibria_cost_c_d(self, resolution=1000) -> Tuple[Dict, Dict]:
         """Computes stable and unstable equilibria for different c_d values.
 
@@ -218,15 +245,12 @@ class FiniteNPlayerHDGTDynamics(FiniteNPlayerHDGDynamics):
             G[0] = 0
             G[-1] = 0
             epsilon = 1e-6
-            saddle_points_idx = np.where(
-                (np.roll(G, -1) * G < 0) | (np.abs(G) <= epsilon)
-            )[0]
-            saddle_points = saddle_points_idx / self.Z
-
+            equilibria_idx = np.where((np.roll(G, -1) * G < 0) | (np.abs(G) <= epsilon))[0]
+            saddle_points = equilibria_idx / (self.Z)
             saddle_types = find_saddle_type_and_gradient_direction(
-                G, saddle_points_idx
+                G, equilibria_idx
             )[0]
-            # remove first and last equilibria
+            
             saddle_points = saddle_points[1:-1]
             saddle_types = saddle_types[1:-1]
             # use min() to remove duplicates
@@ -253,16 +277,20 @@ class FiniteNPlayerHDGTDynamics(FiniteNPlayerHDGDynamics):
             plt.plot(
                 st_eq.keys(),
                 st_eq.values(),
-                label=f"$c_d={c_d}$",
+                label=f"$c_d={c_d}$ - stable",
                 color=color,
             )
             plt.plot(
                 un_eq.keys(),
                 un_eq.values(),
                 "--",
-                label=f"$c_d={c_d}$",
+                label=f"$c_d={c_d}$ - unstable",
                 color=color,
             )
+        plt.xlim(0, 1)
+        plt.ylim(0, 1)
+        plt.xlabel(f'$c_H$')
+        plt.ylabel(f'$k^*/Z$')
         plt.legend()
         plt.show()
     
@@ -278,16 +306,20 @@ class FiniteNPlayerHDGTDynamics(FiniteNPlayerHDGDynamics):
             plt.plot(
                 st_eq.keys(),
                 st_eq.values(),
-                label=f"$c_h={c_h}$",
+                label=f"$c_h={c_h}$ - stable",
                 color=color,
             )
             plt.plot(
                 un_eq.keys(),
                 un_eq.values(),
                 "--",
-                label=f"$c_h={c_h}$",
+                label=f"$c_h={c_h}$ - unstable",
                 color=color,
             )
+        plt.xlim(0, 1)
+        plt.ylim(0, 1)
+        plt.xlabel(f'$c_D$')
+        plt.ylabel(f'$k^*/Z$')
         plt.legend()
         plt.show()
 
@@ -314,24 +346,28 @@ def plot_equilibria(Z: int, w: float):
 
         finite = FiniteNPlayerHDGDynamics(Z, N, w)
         equilibria = np.array([finite.find_equilibrium(finite.compute_full_gradient(c_h)[1]) for c_h in ch_values])
-        plt.plot(ch_values, equilibria/Z, label=N)
+        plt.plot(ch_values, equilibria/Z, label=f'N = {N}')
 
     plt.xlabel("$C_H$")
     plt.ylabel("$k^*/Z$")
+    plt.xlim(0, 1)
+    plt.ylim(0, 1)
+    plt.title("Equilibria of the N-person HDG in finite populations")
     plt.legend()
     #plt.savefig("plots/equilibria.png")
     plt.show()
 
 
 if __name__ == "__main__":
-    #finite = FiniteNPlayerHDGDynamics(100, 5, 1)
+    #finite = FiniteNPlayerHDGDynamics(Z=100, )
+    #FiniteNPlayerHDGDynamics.plot_hdg_gradient()
     #fig, gradient = finite.plot_gradient_selection(0.5)
     #plt.show()
     #gradient[40] = 0.0
     #print(gradient[39:44])
     #print(finite.find_equilibrium(gradient))
     #plot_equilibria(100, 1)
-    FiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=0.4)
+    FiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=0.8)
 
 
 

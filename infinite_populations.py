@@ -131,16 +131,21 @@ class InfiniteNPlayerHDGDynamics:
             Sample size, by default 5
         """
         costs = [0.1, 0.5, 0.9]
-        plt.figure(figsize=(12, 8))
+        #plt.figure(figsize=(12, 8))
         ax = plt.axes()
         patches = np.zeros_like(costs, dtype=object)
         for i, c in enumerate(costs):
             rep_dyn = InfiniteNPlayerHDGDynamics(N, c, nb_states=10000)
             rep_dyn.plot_gradient(ax=ax)
             patches[i] = mpatches.Patch(
-                color=list(mcolors.TABLEAU_COLORS.values())[i], label=c
+                color=list(mcolors.TABLEAU_COLORS.values())[i], label=f'$c_H = {c}$'
             )
         ax.legend(handles=patches.tolist())
+        plt.xlabel(f'$x$')
+        plt.ylabel(r"$\dot{x}$")
+        plt.xlim(0, 1)
+        plt.ylim(-0.10, 0.08)
+        plt.title("Gradient of selection of the N-person HDG in infinite populations")
         plt.show()
 
     @staticmethod
@@ -150,7 +155,12 @@ class InfiniteNPlayerHDGDynamics:
         for N in N_values:
             rep_dyn = InfiniteNPlayerHDGDynamics(N, 0.9, nb_states=10000)
             eq = rep_dyn.compute_hdg_equilibria_cost_c_h()
-            plt.plot(np.linspace(0, 1, rep_dyn.nb_costs), eq, label=N)
+            plt.plot(np.linspace(0, 1, rep_dyn.nb_costs), eq, label=f'$N = {N}$')
+        plt.xlabel(f'$c_H$')
+        plt.ylabel(f'$x^*$')
+        plt.xlim(0, 1)
+        plt.ylim(0, 1)
+        plt.title("Equilibria of the N-person HDG in infinite populations")
         plt.legend()
         plt.show()
 
@@ -183,21 +193,25 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
         colors = ["red", "blue", "black"]
         for c_d, color in zip(c_d_values, colors):
             print(c_d)
-            rep_dyn = InfiniteNPlayerHDGTDynamics(N, 0.9, nb_states=10000, T=T, c_d=c_d)
+            rep_dyn = InfiniteNPlayerHDGTDynamics(N, 0.9, nb_states=1000, nb_costs=1000, T=T, c_d=c_d)
             un_eq, st_eq = rep_dyn.compute_hdgt_equilibria_cost_c_h()
             plt.plot(
                 st_eq.keys(),
                 st_eq.values(),
-                label=f"$c_d={c_d}$",
+                label=f"$c_d={c_d}$ - stable",
                 color=color,
             )
             plt.plot(
                 un_eq.keys(),
                 un_eq.values(),
                 "--",
-                label=f"$c_d={c_d}$",
+                label=f"$c_d={c_d}$ - unstable",
                 color=color,
             )
+        plt.xlim(0, 1)
+        plt.ylim(0, 1)
+        plt.xlabel(f'$c_H$')
+        plt.ylabel(f'$x^*$')
         plt.legend()
         plt.show()
 
@@ -207,21 +221,25 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
         colors = ["red", "blue", "black"]
         for c_h, color in zip(c_h_values, colors):
             print(c_h)
-            rep_dyn = InfiniteNPlayerHDGTDynamics(N, c_h, nb_states=10000, T=T)
+            rep_dyn = InfiniteNPlayerHDGTDynamics(N, c_h, nb_states=1000, nb_costs=1000, T=T)
             un_eq, st_eq = rep_dyn.compute_hdgt_equilibria_cost_c_d()
             plt.plot(
                 st_eq.keys(),
                 st_eq.values(),
-                label=f"$c_H={c_h}$",
+                label=f"$c_H={c_h}$ - stable",
                 color=color,
             )
             plt.plot(
                 un_eq.keys(),
                 un_eq.values(),
                 "--",
-                label=f"$c_H={c_h}$",
+                label=f"$c_H={c_h}$ - unstable",
                 color=color,
             )
+        plt.xlim(0, 1)
+        plt.ylim(0, 1)
+        plt.xlabel(f'$c_D$')
+        plt.ylabel(f'$x^*$')
         plt.legend()
         plt.show()
 
@@ -415,7 +433,7 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
                         [c_h],
                         [c_d],
                         label=phase_dictionary[phase][0],
-                        marker=".",
+                        marker="o",
                         markersize=10,
                         color=color,
                     )
@@ -423,11 +441,15 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
                     plt.plot(
                         [c_h],
                         [c_d],
-                        marker=".",
+                        marker="o",
                         markersize=500 / resolution_cost,
                         color=color,
                     )
-        plt.title(f"T = {T}")
+        plt.xlim(0, 1)
+        plt.ylim(0, 1)
+        plt.xlabel(f"$c_H$")
+        plt.ylabel(f"$c_D$")
+        plt.title(f"$T = {T}$")
         plt.legend()
         plt.show()
 
@@ -436,7 +458,7 @@ if __name__ == "__main__":
     # InfiniteNPlayerHDGDynamics.plot_hdg_gradient()
     # InfiniteNPlayerHDGDynamics.plot_hdg_equilibria()
     # hdgt = InfiniteNPlayerHDGTDynamics(N=30, c_h=0.2, R=1, c_d=0.2, T=0.4)
-    InfiniteNPlayerHDGTDynamics.plot_c_h_equilibria(T=0.4)
+    #InfiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=0.8)
     # InfiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=0.4)
     # InfiniteNPlayerHDGTDynamics.plot_c_h_equilibria(T=0.6)
-    # InfiniteNPlayerHDGTDynamics.plot_phase_diagram(N = 5, T = 0.4, resolution_cost = 50)
+    InfiniteNPlayerHDGTDynamics.plot_phase_diagram(N = 5, T = 0.2, resolution_cost = 100)
