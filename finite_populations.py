@@ -180,7 +180,7 @@ class FiniteNPlayerHDGTDynamics(FiniteNPlayerHDGDynamics):
 
         return T_plus - T_minus
 
-    def compute_hdgt_equilibria_cost_c_h(self, resolution=1000) -> Tuple[Dict, Dict]:
+    def compute_hdgt_equilibria_cost_c_h(self, resolution=100) -> Tuple[Dict, Dict]:
         """Computes stable and unstable equilibria for different c_h values.
 
         Returns
@@ -225,7 +225,7 @@ class FiniteNPlayerHDGTDynamics(FiniteNPlayerHDGDynamics):
                 pass
         return unstable_equilibria, stable_equilibria
     
-    def compute_hdgt_equilibria_cost_c_d(self, resolution=1000) -> Tuple[Dict, Dict]:
+    def compute_hdgt_equilibria_cost_c_d(self, resolution=100) -> Tuple[Dict, Dict]:
         """Computes stable and unstable equilibria for different c_d values.
 
         Returns
@@ -275,17 +275,35 @@ class FiniteNPlayerHDGTDynamics(FiniteNPlayerHDGDynamics):
             print(c_d)
             rep_dyn = FiniteNPlayerHDGTDynamics(Z=Z, N=N, w=1.0, T=T, c_d=c_d)
             un_eq, st_eq = rep_dyn.compute_hdgt_equilibria_cost_c_h()
+            """if (0.0 in st_eq and 1.0 in st_eq):
+                plt.plot(
+                st_eq.keys(),
+                st_eq.values(),
+                linestyle='--',
+                color=color,
+            )
+            if (0.0 in un_eq and 1.0 in un_eq):
+                plt.plot(
+                un_eq.keys(),
+                un_eq.values(),
+                linestyle='--',
+                color=color,
+            )"""
             plt.plot(
                 st_eq.keys(),
                 st_eq.values(),
-                label=f"$c_d={c_d}$ - stable",
+                linestyle='None',
+                marker='o',
+                label=f"$c_D={c_d}$ - stable",
                 color=color,
             )
             plt.plot(
                 un_eq.keys(),
                 un_eq.values(),
-                "--",
-                label=f"$c_d={c_d}$ - unstable",
+                linestyle='None',
+                marker='o',
+                markerfacecolor='None',
+                label=f"$c_D={c_d}$ - unstable",
                 color=color,
             )
         plt.xlim(0, 1)
@@ -304,17 +322,35 @@ class FiniteNPlayerHDGTDynamics(FiniteNPlayerHDGDynamics):
             rep_dyn = FiniteNPlayerHDGTDynamics(Z=Z, N=N, w=1.0, T=T)
             rep_dyn.c_h = c_h
             un_eq, st_eq = rep_dyn.compute_hdgt_equilibria_cost_c_d()
+            """if (0.0 in st_eq and 1.0 in st_eq):
+                plt.plot(
+                st_eq.keys(),
+                st_eq.values(),
+                linestyle='--',
+                color=color,
+            )
+            if (0.0 in un_eq and 1.0 in un_eq):
+                plt.plot(
+                un_eq.keys(),
+                un_eq.values(),
+                linestyle='--',
+                color=color,
+            )"""
             plt.plot(
                 st_eq.keys(),
                 st_eq.values(),
-                label=f"$c_h={c_h}$ - stable",
+                linestyle='None',
+                marker='o',
+                label=f"$c_H={c_h}$ - stable",
                 color=color,
             )
             plt.plot(
                 un_eq.keys(),
                 un_eq.values(),
-                "--",
-                label=f"$c_h={c_h}$ - unstable",
+                linestyle='None',
+                marker='o',
+                markerfacecolor='None',
+                label=f"$c_H={c_h}$ - unstable",
                 color=color,
             )
         plt.xlim(0, 1)
@@ -347,7 +383,7 @@ def plot_equilibria(Z: int, w: float):
 
         finite = FiniteNPlayerHDGDynamics(Z, N, w)
         equilibria = np.array([finite.find_equilibrium(finite.compute_full_gradient(c_h)[1]) for c_h in ch_values])
-        plt.plot(ch_values, equilibria/Z, label=f'N = {N}')
+        plt.plot(ch_values, equilibria/Z, label=f'N = {N}', marker='D', markerfacecolor='None')
 
     plt.xlabel("$C_H$")
     plt.ylabel("$k^*/Z$")
@@ -361,14 +397,14 @@ def plot_equilibria(Z: int, w: float):
 
 if __name__ == "__main__":
     #finite = FiniteNPlayerHDGDynamics(Z=100, )
-    FiniteNPlayerHDGDynamics.plot_hdg_gradient()
+    #FiniteNPlayerHDGDynamics.plot_hdg_gradient()
     #fig, gradient = finite.plot_gradient_selection(0.5)
     #plt.show()
     #gradient[40] = 0.0
     #print(gradient[39:44])
     #print(finite.find_equilibrium(gradient))
     #plot_equilibria(100, 1)
-    #FiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=0.8)
+    FiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=0.4)
 
 
 
