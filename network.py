@@ -168,7 +168,7 @@ class InfiniteNPlayerHDGNetworkDynamic:
 
         gain_i_list = []
         gain_j_list = []
-        change_list = []
+        new_pop = []
         vertices = self.network.get_vertices()
         for i in range(len(vertices)):
             # For Hawk the strategy is zero and for Dove it is 1
@@ -188,22 +188,16 @@ class InfiniteNPlayerHDGNetworkDynamic:
             # If the selected neighbor is of the same type we put -1 if not we put Gj 
             if(vertices[neis[index_selected]].attributes()["value"] == strategy):
                 gain_j_list.append(-1) 
-                change_list.append(0)
+                new_pop.append(strategy)
             else:
                 gain_j_list.append(gains[not strategy])
                 # We need to calculate the probability of changing the strategy of the vertice i p = 1/(1+exp(-w*(G_i-G_j)))
                 proba = 1/(1+ np.exp(-self.CONST_W*( gains[not strategy] - gains[strategy])))
                 if( np.random.random() <= proba):
-                    change_list.append(1)
-                else:
-                    change_list.append(0)
+                    new_pop.append(not strategy)
 
-        new_pop = []
-        for id,elem in enumerate(change_list):
-            new_strat = vertices[id].attributes()["value"]
-            if(elem == 1):
-                new_strat = int(not (new_strat))
-            new_pop.append(new_strat)
+                else:
+                    new_pop.append(strategy)
 
         self.network.fill_graph(new_pop)
 
@@ -231,7 +225,7 @@ if __name__ == "__main__":
         x = 0.5
         radius_list = [i for i in range(1,5)]
         R = 1.0
-        c_h_list = [i/100 for i in range(101)]
+        c_h_list = [i/100 for i in range(0,101,2)]
         results = []
         mode = InfiniteNPlayerHDGNetworkDynamic.CONST_MODE_SW
         
@@ -259,13 +253,21 @@ if __name__ == "__main__":
             
             results.append(result)
 
+        N = [5, 13, 25, 41]
+
         plt.figure(figsize=(10,10))
+        if(mode == InfiniteNPlayerHDGNetworkDynamic.CONST_MODE_LATTICE):
+            plt.title("Equilibria of the HDG in 2d lattice network")
+        elif( mode == InfiniteNPlayerHDGNetworkDynamic.CONST_MODE_SW):
+            plt.title("Equilibria of the HDG in small world network")
         plt.axis([0,1,0,1])
-        plt.xlabel("c_h")
-        plt.ylabel("x*")
-        for elem in results:
-            plt.plot(c_h_list, elem)
+        font = {'family':'serif','size':15}
+        plt.xlabel("C_h",fontdict=font)
+        plt.ylabel("x*",fontdict=font)
+        for id,elem in enumerate(results):
+            plt.plot(c_h_list, elem, label="N = "+str(N[id]))
             plt.scatter(c_h_list, elem)
+        plt.legend(loc="lower right",fontsize="x-large")
         plt.show()
 
     
