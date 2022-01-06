@@ -212,6 +212,27 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
                 label=f"$c_d={c_d}$ - unstable",
                 color=color,
             )
+            # now check stable equilibria where there are neither stable or unstable equilibrium
+            if len(un_eq.keys()) == 0 or max(un_eq.keys()) < 1:
+                # then some costs do not have an equilibrium at 0
+                rep_dyn.c_h = 0
+                # check gradient for non-mixed populations
+                (
+                    dove_strategy,
+                    G,
+                    saddle_points,
+                    saddle_type,
+                    gradient_direction,
+                ) = rep_dyn.compute_gradient()
+                # pure hawks is stable ?
+                if saddle_type[-1]:
+                    x = [max(un_eq.keys()), 1] if len(un_eq.keys()) > 0 else [0, 1]
+                    plt.plot(
+                        [max(un_eq.keys()), 1] if len(un_eq.keys()) > 0 else [0, 1],
+                        [1, 1],
+                        color=color,
+                        linewidth=6,
+                    )
         plt.xlim(0, 1)
         plt.ylim(0, 1)
         plt.xlabel(f"$c_H$")
@@ -257,8 +278,6 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
                     gradient_direction,
                 ) = rep_dyn.compute_gradient()
                 # pure hawks is stable ?
-                print(saddle_points)
-                print(saddle_type)
                 if saddle_type[-1]:
                     x = [0, min(un_eq.keys())] if len(un_eq.keys()) > 0 else [0, 1]
                     print(f"Stable eq between 0 and {x[-1]}")
@@ -491,6 +510,6 @@ if __name__ == "__main__":
     # InfiniteNPlayerHDGDynamics.plot_hdg_equilibria()
     # hdgt = InfiniteNPlayerHDGTDynamics(N=30, c_h=0.2, R=1, c_d=0.2, T=0.4)
     # InfiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=0.2)
-    InfiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=0.6)
-    # InfiniteNPlayerHDGTDynamics.plot_c_h_equilibria(T=0.6)
+    # InfiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=0.6)
+    InfiniteNPlayerHDGTDynamics.plot_c_h_equilibria(T=0.2)
     # InfiniteNPlayerHDGTDynamics.plot_phase_diagram(N=5, T=0.2, resolution_cost=100)
