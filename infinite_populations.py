@@ -56,26 +56,11 @@ class InfiniteNPlayerHDGDynamics:
             - self.c_h
         )
 
-    def plot_gradient(self, **kwargs) -> plt.Axes:
-        """Generates the plot of the gradient.
-
-        Returns
-        -------
-        plt.Axes
-            Matplotlib axes object.
-        """
+    def compute_gradient(self):
         # generate array of states
         dove_strategy = np.linspace(0, 1, num=self.nb_states, dtype=np.float64)
         # compute gradient
         G = np.array([self.compute_gradient_for_state(i) for i in dove_strategy])
-        # G2 = np.array([x * (1 - x) *
-        #                (HDG(self.N, self.c_h, self.R).average_fitness_infinite_pop(x)[1] -
-        #                 HDG(self.N, self.c_h, self.R).average_fitness_infinite_pop(x)[0])
-        #                for x in dove_strategy])
-        # print(G)
-        # print(G2)
-        # print(G2 - G)
-        # find saddle points
         epsilon = 1e-6
         saddle_points_idx = np.where((np.roll(G, -1) * G < 0) | (np.abs(G) <= epsilon))[
             0
@@ -84,6 +69,23 @@ class InfiniteNPlayerHDGDynamics:
         saddle_type, gradient_direction = find_saddle_type_and_gradient_direction(
             G, saddle_points_idx
         )
+        return dove_strategy, G, saddle_points, saddle_type, gradient_direction
+
+    def plot_gradient(self, **kwargs) -> plt.Axes:
+        """Generates the plot of the gradient.
+
+        Returns
+        -------
+        plt.Axes
+            Matplotlib axes object.
+        """
+        (
+            dove_strategy,
+            G,
+            saddle_points,
+            saddle_type,
+            gradient_direction,
+        ) = self.compute_gradient()
         ax = egt_gradient(
             dove_strategy,
             G,
@@ -131,17 +133,17 @@ class InfiniteNPlayerHDGDynamics:
             Sample size, by default 5
         """
         costs = [0.1, 0.5, 0.9]
-        #plt.figure(figsize=(12, 8))
+        # plt.figure(figsize=(12, 8))
         ax = plt.axes()
         patches = np.zeros_like(costs, dtype=object)
         for i, c in enumerate(costs):
             rep_dyn = InfiniteNPlayerHDGDynamics(N, c, nb_states=10000)
             rep_dyn.plot_gradient(ax=ax)
             patches[i] = mpatches.Patch(
-                color=list(mcolors.TABLEAU_COLORS.values())[i], label=f'$c_H = {c}$'
+                color=list(mcolors.TABLEAU_COLORS.values())[i], label=f"$c_H = {c}$"
             )
         ax.legend(handles=patches.tolist())
-        plt.xlabel(f'$x$')
+        plt.xlabel(f"$x$")
         plt.ylabel(r"$\dot{x}$")
         plt.xlim(0, 1)
         plt.ylim(-0.10, 0.08)
@@ -155,9 +157,9 @@ class InfiniteNPlayerHDGDynamics:
         for N in N_values:
             rep_dyn = InfiniteNPlayerHDGDynamics(N, 0.9, nb_states=10000)
             eq = rep_dyn.compute_hdg_equilibria_cost_c_h()
-            plt.plot(np.linspace(0, 1, rep_dyn.nb_costs), eq, label=f'$N = {N}$')
-        plt.xlabel(f'$c_H$')
-        plt.ylabel(f'$x^*$')
+            plt.plot(np.linspace(0, 1, rep_dyn.nb_costs), eq, label=f"$N = {N}$")
+        plt.xlabel(f"$c_H$")
+        plt.ylabel(f"$x^*$")
         plt.xlim(0, 1)
         plt.ylim(0, 1)
         plt.title("Equilibria of the N-person HDG in infinite populations")
@@ -193,7 +195,9 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
         colors = ["red", "blue", "black"]
         for c_d, color in zip(c_d_values, colors):
             print(c_d)
-            rep_dyn = InfiniteNPlayerHDGTDynamics(N, 0.9, nb_states=1000, nb_costs=1000, T=T, c_d=c_d)
+            rep_dyn = InfiniteNPlayerHDGTDynamics(
+                N, 0.9, nb_states=1000, nb_costs=1000, T=T, c_d=c_d
+            )
             un_eq, st_eq = rep_dyn.compute_hdgt_equilibria_cost_c_h()
             plt.plot(
                 st_eq.keys(),
@@ -210,18 +214,22 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
             )
         plt.xlim(0, 1)
         plt.ylim(0, 1)
-        plt.xlabel(f'$c_H$')
-        plt.ylabel(f'$x^*$')
+        plt.xlabel(f"$c_H$")
+        plt.ylabel(f"$x^*$")
         plt.legend()
         plt.show()
 
     @staticmethod
     def plot_c_d_equilibria(N=5, T=0.2):
         c_h_values = [0.2, 0.5, 0.8]
+        c_h_values.reverse()
         colors = ["red", "blue", "black"]
+        colors.reverse()
         for c_h, color in zip(c_h_values, colors):
             print(c_h)
-            rep_dyn = InfiniteNPlayerHDGTDynamics(N, c_h, nb_states=1000, nb_costs=1000, T=T)
+            rep_dyn = InfiniteNPlayerHDGTDynamics(
+                N, c_h, nb_states=1000, nb_costs=1000, T=T
+            )
             un_eq, st_eq = rep_dyn.compute_hdgt_equilibria_cost_c_d()
             plt.plot(
                 st_eq.keys(),
@@ -236,10 +244,34 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
                 label=f"$c_H={c_h}$ - unstable",
                 color=color,
             )
+            # now check stable equilibria where there are neither stable or unstable equilibrium
+            if len(un_eq.keys()) == 0 or min(un_eq.keys()) > 0:
+                # then some costs do not have an equilibrium at 0
+                rep_dyn.c_d = 0
+                # check gradient for non-mixed populations
+                (
+                    dove_strategy,
+                    G,
+                    saddle_points,
+                    saddle_type,
+                    gradient_direction,
+                ) = rep_dyn.compute_gradient()
+                # pure hawks is stable ?
+                print(saddle_points)
+                print(saddle_type)
+                if saddle_type[-1]:
+                    x = [0, min(un_eq.keys())] if len(un_eq.keys()) > 0 else [0, 1]
+                    print(f"Stable eq between 0 and {x[-1]}")
+                    plt.plot(
+                        [0, min(un_eq.keys())] if len(un_eq.keys()) > 0 else [0, 1],
+                        [1, 1],
+                        color=color,
+                        linewidth=6,
+                    )
         plt.xlim(0, 1)
         plt.ylim(0, 1)
-        plt.xlabel(f'$c_D$')
-        plt.ylabel(f'$x^*$')
+        plt.xlabel(f"$c_D$")
+        plt.ylabel(f"$x^*$")
         plt.legend()
         plt.show()
 
@@ -466,7 +498,7 @@ if __name__ == "__main__":
     # InfiniteNPlayerHDGDynamics.plot_hdg_gradient()
     # InfiniteNPlayerHDGDynamics.plot_hdg_equilibria()
     # hdgt = InfiniteNPlayerHDGTDynamics(N=30, c_h=0.2, R=1, c_d=0.2, T=0.4)
-    #InfiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=0.8)
-    # InfiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=0.4)
+    # InfiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=0.2)
+    InfiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=0.6)
     # InfiniteNPlayerHDGTDynamics.plot_c_h_equilibria(T=0.6)
-    InfiniteNPlayerHDGTDynamics.plot_phase_diagram(N = 5, T = 0.8, resolution_cost = 100)
+    # InfiniteNPlayerHDGTDynamics.plot_phase_diagram(N=5, T=0.2, resolution_cost=100)
