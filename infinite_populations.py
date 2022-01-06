@@ -339,7 +339,7 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
                     pass
         return unstable_equilibria, stable_equilibria
 
-    def compute_stable_equilibria(self, epsilon=1e-6) -> list:
+    def compute_stable_equilibria(self, epsilon=1e-7) -> list:
         """
         Compute the stable equilibria for the current game
 
@@ -349,20 +349,26 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
         # array of states
         dove_strategy = np.linspace(0, 1, num=self.nb_states, dtype=np.float64)
         # find optimal state for each cost
-        equilibria = []
         G = np.array([self.compute_gradient_for_state(i) for i in dove_strategy])
         equilibria_idx = np.where((np.roll(G, -1) * G < 0) | (np.abs(G) <= epsilon))[0]
-        equilibria = equilibria_idx / (self.nb_states - 1)
+        stable_equilibria = []
         # Check for x = 0 and x = 1
-        if G[1] > 0:
-            # We know G[0] = 0, so we check if it goes directly down with G[1] -> Unstable point
-            # Remove x = 0
-            equilibria = np.delete(equilibria, 0)
-        if G[-2] < 0:
-            # We know G[-1] = 0, so we check if it goes directly up with G[-2] -> Unstable point
-            # Remove x = 1
-            equilibria = np.delete(equilibria, -1)
-        return equilibria
+        if G[1] < 0:
+            # We know G[0] = 0, so we check if it goes directly up with G[1] -> Stable point
+            stable_equilibria.append(0)
+        
+        for equilibrium_idx in equilibria_idx:
+            if equilibrium_idx == 0 or equilibrium_idx == G.size - 1:
+                continue
+            if G[equilibrium_idx - 1] > -epsilon and G[equilibrium_idx + 1] < epsilon:
+                #Stable
+                stable_equilibria.append(equilibrium_idx / (self.nb_states - 1))
+        if G[-2] > 0:
+            # We know G[-1] = 0, so we check if it goes directly down with G[-2] -> Stable point
+            stable_equilibria.append(1)
+
+
+        return stable_equilibria
 
     @staticmethod
     def get_phase(equilibria, epsilon=1e-6) -> Tuple[bool, bool, bool]:
@@ -400,8 +406,8 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
         c_h_values = np.linspace(0, 1, resolution_cost)
         phase_dictionary = {
             # (Doves, Hawks, Mixed)
-            (True, True, True): ("hawks + doves + mixed", "blue"),
-            (True, True, False): ("hawks + doves", "orange"),
+            (True, True, True): ("hawks + doves + mixed", "orange"),
+            (True, True, False): ("hawks + doves", "blue"),
             (True, False, True): ("doves + mixed", "green"),
             (True, False, False): ("doves", "red"),
             (False, True, True): ("hawks + mixed", "purple"),
@@ -433,6 +439,7 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
                         [c_h],
                         [c_d],
                         label=phase_dictionary[phase][0],
+                        linestyle='None',
                         marker="o",
                         markersize=10,
                         color=color,
@@ -441,6 +448,7 @@ class InfiniteNPlayerHDGTDynamics(InfiniteNPlayerHDGDynamics):
                     plt.plot(
                         [c_h],
                         [c_d],
+                        linestyle='None',
                         marker="o",
                         markersize=500 / resolution_cost,
                         color=color,
@@ -461,4 +469,4 @@ if __name__ == "__main__":
     #InfiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=0.8)
     # InfiniteNPlayerHDGTDynamics.plot_c_d_equilibria(T=0.4)
     # InfiniteNPlayerHDGTDynamics.plot_c_h_equilibria(T=0.6)
-    InfiniteNPlayerHDGTDynamics.plot_phase_diagram(N = 5, T = 0.2, resolution_cost = 100)
+    InfiniteNPlayerHDGTDynamics.plot_phase_diagram(N = 5, T = 0.8, resolution_cost = 100)
